@@ -14,6 +14,7 @@
 import bpy
 import requests
 import json
+import random
 
 bl_info = {
     "name": "APIAddon",
@@ -25,6 +26,8 @@ bl_info = {
     "warning": "",
     "category": "Generic"
 }
+
+
 
 
 class account(object):
@@ -66,6 +69,23 @@ class APIAddon(bpy.types.Operator):
         "category": "Add Mesh",
     }
     bl_options = {"REGISTER", "UNDO"}
+    num : bpy.props.IntProperty(
+        name = "Cube Number",
+        description = "Defines the number of cubes",
+        default = 5)
+        
+    cube_size_min : bpy.props.FloatProperty(
+        name = "Min Cube Size",
+        default = 0.5)
+        
+    cube_size_max : bpy.props.FloatProperty(
+        name = "Max Cube Size",
+        default = 2.0)
+        
+    cube_color : bpy.props.FloatVectorProperty(
+        name = "My Vector",
+        default = (0,0,1),
+        subtype = "COLOR")
 
     @classmethod
     def poll(cls, context):
@@ -77,7 +97,7 @@ class APIAddon(bpy.types.Operator):
         # print(type(resp))
         # print(r.json())
 
-        summonerName = "glucides"
+        summonerName = "veryfirstghost"
         requestString = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}"
         header = {
             'X-Riot-Token': 'RGAPI-8224790b-11c8-4cf9-85fa-c6da6f120581',
@@ -102,12 +122,69 @@ class APIAddon(bpy.types.Operator):
         resp = requests.get(requestChampionMasteryString, headers=header)
         #print(resp.json())
 
-        summoners = json.loads(resp.text)
-        print(f"length of summoners: {len(summoners)}")
+        requestChampionNames = f"http://ddragon.leagueoflegends.com/cdn/11.20.1/data/en_US/champion.json"
+        respNames = requests.get(requestChampionNames)
+        #print(respNames.json())
 
+        championInfo = json.loads(respNames.text)
 
-        for summoner in summoners:
-            print(summoner['championId'])
+        print(championInfo)
+
+        
+
+        champions = json.loads(resp.text)
+        print(f"length of summoners: {len(champions)}")
+
+        bpy.ops.object.select_all(action='SELECT') # selektiert alle Objekte
+        bpy.ops.object.delete(use_global=False, confirm=False) # löscht selektierte objekte
+        bpy.ops.outliner.orphans_purge() # löscht überbleibende Meshdaten etc.  
+
+        i = 0
+        #for y in range(2):
+        for x in range(6):              
+        #for summoner in summoners:                        
+                
+            total_height = 0
+            rand_offset = 0.4
+
+            """ currentchamp = ""
+            for champ in range(len(championInfo)):
+                if championInfo['data'][champ]['key'] == champions[i]['championId']:
+                    currentchamp = championInfo['data'][champ]['key'] """
+
+            bpy.data.curves.new(type="FONT", name=f"Font Curve{i}").body = str(champions[i]['championId'])
+            font_obj = bpy.data.objects.new(name=f"Font Object{i}", object_data=bpy.data.curves[f"Font Curve{i}"])
+            bpy.context.scene.collection.objects.link(font_obj)
+            font_obj.location = (x*5-17,-3,0)
+            font_obj.rotation_euler = (45,0,0)
+
+            for z in range(int(champions[i]['championPoints']/1000)):
+                c_cube_size = random.uniform(self.cube_size_min,self.cube_size_max)
+                
+                bpy.ops.mesh.primitive_cube_add(location=(x*5-17,0, total_height + c_cube_size/2),size=(c_cube_size))
+                total_height+= c_cube_size
+                
+                
+                bpy.context.object.rotation_euler.z = random.uniform(0, 360)
+                
+                bpy.context.object.location.x += random.uniform(-c_cube_size*rand_offset, +c_cube_size*rand_offset)
+                bpy.context.object.location.y += random.uniform(-c_cube_size*rand_offset, +c_cube_size*rand_offset)
+                bpy.ops.rigidbody.object_add()
+                bpy.context.object.color = (self.cube_color.r,self.cube_color.g,self.cube_color.b,random.uniform(0.5,1))
+
+            #print("help")
+            
+
+            print(f"i: {i}")
+            print(f"ChPoints: {champions[i]['championPoints']}")
+            print(f"ChId: {champions[i]['championId']}")
+            print("")
+            i += 1
+
+            
+        bpy.ops.mesh.primitive_plane_add(size=30)
+        bpy.ops.rigidbody.object_add()
+        bpy.context.object.rigid_body.type = 'PASSIVE'
 
 
         return {"FINISHED"}
