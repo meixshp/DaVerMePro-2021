@@ -136,6 +136,10 @@ class APIAddon(bpy.types.Operator):
         bpy.ops.object.delete(use_global=False, confirm=False)
         bpy.ops.outliner.orphans_purge()  # löscht überbleibende Meshdaten etc.
 
+        mat = bpy.data.materials.new(name="Font Color")
+        mat.diffuse_color = (0.7, 0.5, 1.0, 1.0)
+        mat = bpy.data.materials['Font Color']
+
         i = 0
         # for y in range(2):
         for x in range(6):
@@ -149,7 +153,6 @@ class APIAddon(bpy.types.Operator):
                 # print(championInfo['data'][key]['id'])
                 if str(championInfo['data'][key]['key']) == str(champions[i]["championId"]):
                     currentchamp = str(championInfo['data'][key]['name'])
-                    print("current champ: ")
                     print(currentchamp)
                     break
 
@@ -158,15 +161,16 @@ class APIAddon(bpy.types.Operator):
             font_obj = bpy.data.objects.new(
                 name=f"Font Object{i}", object_data=bpy.data.curves[f"Font Curve{i}"])
             bpy.context.scene.collection.objects.link(font_obj)
-            font_obj.location = (x*5-17, -3, 0)
+            font_obj.location = (x*7-17, -3, 0)
             font_obj.rotation_euler = (45, 0, 0)
+            bpy.data.curves[f"Font Curve{i}"].materials.append(mat)
 
             for z in range(int(champions[i]['championPoints']/1000)):
                 c_cube_size = random.uniform(
                     self.cube_size_min, self.cube_size_max)
 
                 bpy.ops.mesh.primitive_cube_add(
-                    location=(x*5-17, 0, total_height + c_cube_size/2), size=(c_cube_size))
+                    location=(x*7-17, 0, total_height + c_cube_size/2), size=(c_cube_size))
                 total_height += c_cube_size
 
                 bpy.context.object.rotation_euler.z = random.uniform(0, 360)
