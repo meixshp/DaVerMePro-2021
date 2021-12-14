@@ -140,9 +140,22 @@ class APIAddon(bpy.types.Operator):
         mat.diffuse_color = (0.7, 0.5, 1.0, 1.0)
         mat = bpy.data.materials['Font Color']
 
+        #hier war früher mal die for schleife
+        self.printDefinedNumberOfChamps()
+
+        bpy.ops.mesh.primitive_plane_add(size=30)
+        bpy.ops.rigidbody.object_add()
+        bpy.context.object.rigid_body.type = 'PASSIVE'
+
+        return {"FINISHED"}
+
+    #define method to get any json response
+    @classmethod
+    def printDefinedNumberOfChamps(number):
+        
         i = 0
         # for y in range(2):
-        for x in range(6):
+        for x in range(number):
             # for summoner in summoners:
 
             total_height = 0
@@ -190,14 +203,7 @@ class APIAddon(bpy.types.Operator):
             print(f"ChId: {champions[i]['championId']}")
             print("")
             i += 1
-
-        bpy.ops.mesh.primitive_plane_add(size=30)
-        bpy.ops.rigidbody.object_add()
-        bpy.context.object.rigid_body.type = 'PASSIVE'
-
-        return {"FINISHED"}
-
-
+        
 def menu_func(self, context):
     self.layout.operator(APIAddon.bl_idname, icon="SELECT_EXTEND")
 
