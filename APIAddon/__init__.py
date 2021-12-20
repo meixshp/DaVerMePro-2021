@@ -12,6 +12,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
+from bpy import context
 import requests
 import json
 import random
@@ -51,6 +52,12 @@ class summoner(object):
         self.tokensEarned = tokensEarned
         self.summonerId = summonerId
 
+class champ(object):
+    def __init__(self, id,  name, points, ):
+        self.id = id
+        self.name = name
+        self.points = points
+
 
 class APIAddon(bpy.types.Operator):
 
@@ -87,6 +94,14 @@ class APIAddon(bpy.types.Operator):
         default=(0, 0, 1),
         subtype="COLOR")
 
+    summoner_Name: bpy.props.StringProperty(
+        name="Name of the Summoner",
+        default="veryfirstghost")
+
+    riot_Token: bpy.props.StringProperty(
+        name="X-Riot-Token",
+        default="RGAPI-694c54e5-0e3e-4173-80d4-a8a2afa5fe40")
+
     @classmethod
     def poll(cls, context):
         return True
@@ -97,10 +112,14 @@ class APIAddon(bpy.types.Operator):
         # print(type(resp))
         # print(r.json())
 
-        summonerName = "veryfirstghost"
+        #if (self.riot_Token == ""):
+        #    self.riot_Token = "RGAPI-694c54e5-0e3e-4173-80d4-a8a2afa5fe40"
+        
+
+        summonerName = f"{self.summoner_Name}"
         requestString = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}"
         header = {
-            'X-Riot-Token': 'RGAPI-30fdcbcc-b248-4c4e-a9c8-99dade527d87',
+            'X-Riot-Token': self.riot_Token,
         }
 
         resp = requests.get(requestString, headers=header)
@@ -144,50 +163,18 @@ class APIAddon(bpy.types.Operator):
         # for y in range(2):
         for x in range(6):
             # for summoner in summoners:
+            currentchamp = getCurrentChamp(self, championInfo, champions, i)
 
-            total_height = 0
-            rand_offset = 0.4
+            createCube(self, context, x, currentchamp, mat)
+            setNames(self, currentchamp, mat, x, i)
 
-            currentchamp = ""
-            for key in championInfo["data"]:
-                # print(championInfo['data'][key]['id'])
-                if str(championInfo['data'][key]['key']) == str(champions[i]["championId"]):
-                    currentchamp = str(championInfo['data'][key]['name'])
-                    print(currentchamp)
-                    break
-
-            bpy.data.curves.new(
-                type="FONT", name=f"Font Curve{i}").body = currentchamp
-            font_obj = bpy.data.objects.new(
-                name=f"Font Object{i}", object_data=bpy.data.curves[f"Font Curve{i}"])
-            bpy.context.scene.collection.objects.link(font_obj)
-            font_obj.location = (x*7-17, -3, 0)
-            font_obj.rotation_euler = (45, 0, 0)
-            bpy.data.curves[f"Font Curve{i}"].materials.append(mat)
-
-            for z in range(int(champions[i]['championPoints']/1000)):
-                c_cube_size = random.uniform(
-                    self.cube_size_min, self.cube_size_max)
-
-                bpy.ops.mesh.primitive_cube_add(
-                    location=(x*7-17, 0, total_height + c_cube_size/2), size=(c_cube_size))
-                total_height += c_cube_size
-
-                bpy.context.object.rotation_euler.z = random.uniform(0, 360)
-
-                bpy.context.object.location.x += random.uniform(
-                    -c_cube_size*rand_offset, +c_cube_size*rand_offset)
-                bpy.context.object.location.y += random.uniform(
-                    -c_cube_size*rand_offset, +c_cube_size*rand_offset)
-                bpy.ops.rigidbody.object_add()
-                bpy.context.object.color = (
-                    self.cube_color.r, self.cube_color.g, self.cube_color.b, random.uniform(0.5, 1))
-
+            # createCubeTower(self, context, currentchamp, champions, mat, i, x) #creates the tower of small cubes
             # print("help")
+            print(currentchamp.name)
 
             print(f"i: {i}")
-            print(f"ChPoints: {champions[i]['championPoints']}")
-            print(f"ChId: {champions[i]['championId']}")
+            print(f"ChPoints: {currentchamp.points}")
+            print(f"ChId: {currentchamp.id}")
             print("")
             i += 1
 
@@ -196,6 +183,56 @@ class APIAddon(bpy.types.Operator):
         bpy.context.object.rigid_body.type = 'PASSIVE'
 
         return {"FINISHED"}
+
+def createCube(self, context, x, currentChamp, mat):
+    scaleFac = currentChamp.points / 10000
+    print(scaleFac)
+    bpy.ops.mesh.primitive_cube_add(size=1,location=(x*7-17, 0, scaleFac/2), scale=(1,1,scaleFac))
+    
+
+
+def getCurrentChamp(self, championInfo, champions, i): 
+    currentchamp = champ(0,"lol",21)
+    for key in championInfo["data"]:
+        # print(championInfo['data'][key]['id'])
+        if str(championInfo['data'][key]['key']) == str(champions[i]["championId"]):
+            currentchamp = champ(champions[i]['championId'],str(championInfo['data'][key]['name']), champions[i]['championPoints'])
+            #print(currentchamp)
+            break
+    return currentchamp
+
+def setNames(self, currentchamp, mat, x, i):
+    bpy.data.curves.new(
+        type="FONT", name=f"Font Curve{i}").body = currentchamp.name
+    font_obj = bpy.data.objects.new(
+        name=f"Font Object{i}", object_data=bpy.data.curves[f"Font Curve{i}"])
+    bpy.context.scene.collection.objects.link(font_obj)
+    font_obj.location = (x*7-17-1, -3, 0)
+    font_obj.rotation_euler = (45, 0, 0)
+    bpy.data.curves[f"Font Curve{i}"].materials.append(mat)
+    
+def createCubeTower(self,context, currentchamp, champions, mat, i, x): #creates the tower of small cubes with names in front
+        total_height = 0
+        rand_offset = 0.4
+
+
+        for z in range(int(champions[i]['championPoints']/1000)):
+            c_cube_size = random.uniform(
+                self.cube_size_min, self.cube_size_max)
+
+            bpy.ops.mesh.primitive_cube_add(
+                location=(x*7-17, 0, total_height + c_cube_size/2), size=(c_cube_size))
+            total_height += c_cube_size
+
+            bpy.context.object.rotation_euler.z = random.uniform(0, 360)
+
+            bpy.context.object.location.x += random.uniform(
+                -c_cube_size*rand_offset, +c_cube_size*rand_offset)
+            bpy.context.object.location.y += random.uniform(
+                -c_cube_size*rand_offset, +c_cube_size*rand_offset)
+            bpy.ops.rigidbody.object_add()
+            bpy.context.object.color = (
+                self.cube_color.r, self.cube_color.g, self.cube_color.b, random.uniform(0.5, 1))
 
 
 def menu_func(self, context):
