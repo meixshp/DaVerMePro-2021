@@ -10,10 +10,10 @@ Zeigt die Masterypoints der Champions an.
 <img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Bar-chart1.png">
 
 #### Bar-Chart nr. 2
-<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Bar-chart1.png">
+<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Bar-chart2.png">
 
 #### Bar-Chart nr. 3
-<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Bar-chart1.png">
+<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Bar-chart3.png">
 
 
 <!-- Di 7.12 Zwischenpräsentationen
