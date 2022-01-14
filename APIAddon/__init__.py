@@ -139,7 +139,7 @@ class APIAddon(bpy.types.Operator):
                 
         name="Type of chart",
         description="Which type of chart do your want? Bar chart, Cake chart, ...",  
-        default="Bar chart"
+        default="BarChart"
     )
 
     type_of_BarChart: bpy.props.IntProperty(
@@ -238,7 +238,7 @@ class APIAddon(bpy.types.Operator):
             planeMat.diffuse_color = (
                 self.plane_color.r, self.plane_color.g, self.plane_color.b, 1)
 
-            i = 1
+            i = 0
 
             # for y in range(2):
             for x in range(self.number_of_Champs):
@@ -266,7 +266,7 @@ class APIAddon(bpy.types.Operator):
                 i += 1
 
             bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0))
-            bpy.context.object.dimensions = (2.5 + self.number_of_Champs*5, 7, 1)
+            bpy.context.object.dimensions = (5 + self.number_of_Champs*5, 7, 1)
             ob = bpy.context.active_object
             #bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
             #bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
@@ -363,7 +363,7 @@ def createCube(self, i, currentChamp, numberOfChamps, mat):
     bpy.ops.mesh.primitive_cube_add(
         size=1, location=(-((numberOfChamps)/2 * 5) + (i + 0.5)*5, 0, scaleFac/2), scale=(1, 1, scaleFac))
     bpy.context.object.color = (
-        self.cube_color.r, self.cube_color.g, self.cube_color.b, random.uniform(0.5, 1))
+        self.cube_color.r, self.cube_color.g, self.cube_color.b, 1)
     ob = bpy.context.active_object
     #bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
     #bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
@@ -388,9 +388,9 @@ def createNameBars(self, i, currentchamp, numberOfChamps, mat):
     bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
     bpy.context.scene.collection.objects.link(font_obj)
 
-    font_obj.location = (-((numberOfChamps)/2 * 5) + (i-0.5)*5 + font_obj.dimensions.x/4, 0, 0)
+    font_obj.location = (-((numberOfChamps)/2 * 5) + (i+0.5)*5 + font_obj.dimensions.x/4, 0, 0)
     #bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
-    font_obj.dimensions = (scaleFac, scaleFac/3, 1)
+    font_obj.dimensions = (scaleFac, 2, 1)
     bpy.data.objects[f"Font BarsObj{i}"].rotation_euler[0] = 1.5708
     bpy.data.objects[f"Font BarsObj{i}"].rotation_euler[1] = -1.5708
     #font_obj.rotation_quaternion = (1,1,1,45) 
@@ -408,7 +408,7 @@ def setNames(self, currentchamp, mat, i, numberOfChamps):
     bpy.context.scene.collection.objects.link(font_obj)
 
     font_obj.location = ((- ((numberOfChamps)/2 * 5) +
-                         (i-0.5)*5) - font_obj.dimensions.x/2, -3, 0)
+                         (i+0.5)*5) - font_obj.dimensions.x/2, -3, 0)
     font_obj.rotation_euler = (45, 0, 0)
 
     bpy.data.curves[f"Font Curve{i}"].materials.append(mat)
@@ -436,7 +436,7 @@ def createCubeTower(self, currentchamp, numberOfChamps, x, mat ):
         #c_cube_size = random.uniform( self.cube_size_min, self.cube_size_max)
         c_cube_size = 1.5
         bpy.ops.mesh.primitive_cube_add(
-            location=(-((numberOfChamps)/2 * 5) + (x-0.5)*5, 0, total_height + c_cube_size/2), size=(c_cube_size))
+            location=(-((numberOfChamps)/2 * 5) + (x+0.5)*5, 0, total_height + c_cube_size/2), size=(c_cube_size))
         total_height += c_cube_size
 
         bpy.context.object.rotation_euler.z = random.uniform(0, 360)
