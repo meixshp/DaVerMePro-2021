@@ -11,6 +11,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+from multiprocessing.dummy import Array
 import bpy
 import requests
 import json
@@ -131,7 +132,11 @@ class APIAddon(bpy.types.Operator):
         default="RGAPI-8213e50a-2ba8-4091-8b25-0937f0696671"
     )
 
-    type_of_chart: bpy.props.StringProperty(
+    type_of_chart: bpy.props.EnumProperty(
+        items={
+        ('Bar chart', 'Bar chart', 'Displays masterypoints in a Bar chart'),
+        ('Pie chart', 'Pie chart', 'Displays winrate in a Pie chart')},
+                
         name="Type of chart",
         description="Which type of chart do your want? Bar chart, Cake chart, ...",  
         default="Bar chart"
