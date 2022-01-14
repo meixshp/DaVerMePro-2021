@@ -81,7 +81,7 @@ class APIAddon(bpy.types.Operator):
         "category": "Add Mesh",
     }
     bl_options = {"REGISTER", "UNDO"}
-    num: bpy.props.IntProperty(
+    """ num: bpy.props.IntProperty(
         name="Cube Number",
         description="Defines the number of cubes",
         default=5)
@@ -92,7 +92,7 @@ class APIAddon(bpy.types.Operator):
 
     cube_size_max: bpy.props.FloatProperty(
         name="Max Cube Size",
-        default=2.0) 
+        default=2.0)  """
 
     number_of_Champs: bpy.props.IntProperty(
         name="Number of Champions",
@@ -128,7 +128,7 @@ class APIAddon(bpy.types.Operator):
     riot_Token: bpy.props.StringProperty(
         name="X-Riot-Token",
         description="You need to generate a X-Riot-Token and put it here to get acces to the data.",
-        default="RGAPI-928e3098-e96b-4925-a058-380eb5dec420"
+        default="RGAPI-8213e50a-2ba8-4091-8b25-0937f0696671"
     )
 
     type_of_chart: bpy.props.StringProperty(
@@ -161,6 +161,7 @@ class APIAddon(bpy.types.Operator):
         header = {
             'X-Riot-Token': self.riot_Token,
         }
+        # puuid: _cXJlH3kUv3IMeizi3eCDmeTGkABlml-BIf3298QmsV2wqO-PluzmY6Y3cermq-BSVHwWW8f5Alt_Q
 
         resp = requests.get(requestString, headers=header)
         # print(resp.json())
@@ -171,120 +172,185 @@ class APIAddon(bpy.types.Operator):
         # resp.decode('utf-8')
         #summunor_dict = resp.json()
         #summunor_obj = Summoner(**summunor_dict)
-        try:
-            s = account(**resp.json())
+        #try:
+        s = account(**resp.json())
 
-            print(f"name: {s.name}")
-            print(f"id: {s.id}")
+        #print(f"name: {s.name}")
+        #print(f"id: {s.id}")
 
-            requestChampionMasteryString = f"https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{s.id}"
-            resp = requests.get(requestChampionMasteryString, headers=header)
-            # print(resp.json())
+        requestChampionMasteryString = f"https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{s.id}"
+        resp = requests.get(requestChampionMasteryString, headers=header)
+        # print(resp.json())
 
-            requestChampionNames = f"http://ddragon.leagueoflegends.com/cdn/11.20.1/data/en_US/champion.json"
-            respNames = requests.get(requestChampionNames)
-            # print(respNames.json())
+        requestChampionNames = f"http://ddragon.leagueoflegends.com/cdn/11.20.1/data/en_US/champion.json"
+        respNames = requests.get(requestChampionNames)
+        # print(respNames.json())
 
-            championInfo = json.loads(respNames.text)
-            # print(championInfo)
+        championInfo = json.loads(respNames.text)
+        # print(championInfo)
 
-            champions = json.loads(resp.text)
-            print(f"length of summoners: {len(champions)}")
+        champions = json.loads(resp.text)
+        print(f"length of summoners: {len(champions)}")
 
-            bpy.ops.object.select_all(action='SELECT')  # selektiert alle Objekte
-            # löscht selektierte objekte
-            bpy.ops.object.delete(use_global=False, confirm=False)
-            bpy.ops.outliner.orphans_purge()  # löscht überbleibende Meshdaten etc.
+        bpy.ops.object.select_all(action='SELECT')  # selektiert alle Objekte
+        # löscht selektierte objekte
+        bpy.ops.object.delete(use_global=False, confirm=False)
+        bpy.ops.outliner.orphans_purge()  # löscht überbleibende Meshdaten etc.
 
-            """ match i:
-                case 1:
-                    print("First case")
-                case 2:
-                    print("Second case")
-                case _:
-                    print("Didn't match a case") """
+        """ match i:
+            case 1:
+                print("First case")
+            case 2:
+                print("Second case")
+            case _:
+                print("Didn't match a case") """
 
-            ############# Bar Chart ###############
-            if self.type_of_chart == "Bar chart": 
+        ############# Bar Chart ###############
+        if self.type_of_chart == "Bar chart": 
+            print("Bar-Chart")    
 
 
-                fontMat = bpy.data.materials.get("FontMaterial")
-                if fontMat is None:
-                    # create material
-                    fontMat = bpy.data.materials.new(name="FontMaterial")
+            fontMat = bpy.data.materials.get("FontMaterial")
+            if fontMat is None:
+                # create material
+                fontMat = bpy.data.materials.new(name="FontMaterial")
 
-                fontMat.diffuse_color = (
-                    self.name_color.r, self.name_color.g, self.name_color.b, 1)
-                fontMat = bpy.data.materials['FontMaterial']
+            fontMat.diffuse_color = (
+                self.name_color.r, self.name_color.g, self.name_color.b, 1)
+            fontMat = bpy.data.materials['FontMaterial']
 
-                cubeMat = bpy.data.materials.get("CubeMaterial")
-                if cubeMat is None:
-                    # create material
-                    cubeMat = bpy.data.materials.new(name="CubeMaterial")
-                cubeMat.diffuse_color = (
-                    self.cube_color.r, self.cube_color.g, self.cube_color.b, 1)
-                
-                planeMat = bpy.data.materials.get("PlaneMaterial")
-                if planeMat is None:
-                    # create material
-                    planeMat = bpy.data.materials.new(name="PlaneMaterial")
-                planeMat.diffuse_color = (
-                    self.plane_color.r, self.plane_color.g, self.plane_color.b, 1)
-
-                i = 1
-
-                # for y in range(2):
-                for x in range(self.number_of_Champs):
-                    # for champ in champs:
-
-                    currentchamp = getCurrentChamp(self, championInfo, champions, i)
-
-                    if self.type_of_BarChart == 1:
-                        createCube(self, x, currentchamp, self.number_of_Champs, cubeMat)
-                    elif self.type_of_BarChart == 2:
-                        createNameBars(self, i, currentchamp, self.number_of_Champs, cubeMat)
-                    elif self.type_of_BarChart == 3:
-                        createCubeTower(self, currentchamp, self.number_of_Champs, i, cubeMat) #creates the tower of small cubes
-                    
-                    
-                    setNames(self, currentchamp, fontMat, i, self.number_of_Champs)
-                    
-                    # print("help")
-                    print(currentchamp.name)
-
-                    print(f"i: {i}")
-                    print(f"ChPoints: {currentchamp.points}")
-                    print(f"ChId: {currentchamp.id}")
-                    print("")
-                    i += 1
-
-                bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0))
-                bpy.context.object.dimensions = (2.5 + self.number_of_Champs*5, 7, 1)
-                ob = bpy.context.active_object
-                #bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
-                #bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-
-                # Get material
-
-                if ob.data.materials:
-                    # assign to 1st material slot
-                    ob.data.materials[0] = planeMat
-                else:
-                    # no slots
-                    ob.data.materials.append(planeMat)
-                #bpy.ops.transform.resize(value=(7+ self.number_of_Champs*2, 7, 1))
-                bpy.ops.rigidbody.object_add()
-                bpy.context.object.rigid_body.type = 'PASSIVE'
-            ##############################################################
-
+            cubeMat = bpy.data.materials.get("CubeMaterial")
+            if cubeMat is None:
+                # create material
+                cubeMat = bpy.data.materials.new(name="CubeMaterial")
+            cubeMat.diffuse_color = (
+                self.cube_color.r, self.cube_color.g, self.cube_color.b, 1)
             
+            planeMat = bpy.data.materials.get("PlaneMaterial")
+            if planeMat is None:
+                # create material
+                planeMat = bpy.data.materials.new(name="PlaneMaterial")
+            planeMat.diffuse_color = (
+                self.plane_color.r, self.plane_color.g, self.plane_color.b, 1)
+
+            i = 1
+
+            # for y in range(2):
+            for x in range(self.number_of_Champs):
+                # for champ in champs:
+
+                currentchamp = getCurrentChamp(self, championInfo, champions, i)
+
+                if self.type_of_BarChart == 1:
+                    createCube(self, x, currentchamp, self.number_of_Champs, cubeMat)
+                elif self.type_of_BarChart == 2:
+                    createNameBars(self, i, currentchamp, self.number_of_Champs, cubeMat)
+                elif self.type_of_BarChart == 3:
+                    createCubeTower(self, currentchamp, self.number_of_Champs, i, cubeMat) #creates the tower of small cubes
+                
+                
+                setNames(self, currentchamp, fontMat, i, self.number_of_Champs)
+                
+                # print("help")
+                print(currentchamp.name)
+
+                print(f"i: {i}")
+                print(f"ChPoints: {currentchamp.points}")
+                print(f"ChId: {currentchamp.id}")
+                print("")
+                i += 1
+
+            bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0))
+            bpy.context.object.dimensions = (2.5 + self.number_of_Champs*5, 7, 1)
+            ob = bpy.context.active_object
+            #bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
+            #bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+
+            # Get material
+
+            if ob.data.materials:
+                # assign to 1st material slot
+                ob.data.materials[0] = planeMat
+            else:
+                # no slots
+                ob.data.materials.append(planeMat)
+            #bpy.ops.transform.resize(value=(7+ self.number_of_Champs*2, 7, 1))
+            bpy.ops.rigidbody.object_add()
+            bpy.context.object.rigid_body.type = 'PASSIVE'
+        
+        ##############################################################
+        elif self.type_of_chart == "Pie chart":
+            print("Pie-Chart")    
+
+            bpy.ops.mesh.primitive_cylinder_add(vertices=101,radius=4, depth=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+
+            ob = bpy.context.active_object
+            mat = createMaterialPieChart(self,0.7,0.2)
+
+            if ob.data.materials:
+                # assign to 1st material slot
+                ob.data.materials[0] = mat
+            else:
+                # no slots
+                ob.data.materials.append(mat)
 
 
-        except:
-            print("Riot-Token is probably too old or the summonerName is Wrong")
-            self.report({'ERROR'}, 'Riot-Token is probably to old or the summonerName is Wrong.')
+        #except:
+        #    print("Riot-Token is probably too old or the summonerName is Wrong")
+        #    self.report({'ERROR'}, 'Riot-Token is probably to old or the summonerName is Wrong.')
 
         return {"FINISHED"}
+
+def createMaterialPieChart(self,winrate,looserate):
+    material_PieChart = bpy.data.materials.new(name= "Material_PieChart")
+    material_PieChart.use_nodes = True
+
+
+    principled_node = material_PieChart.node_tree.nodes.get('Principled BSDF')
+    material_PieChart.node_tree.nodes.remove(principled_node)
+
+
+    material_out = material_PieChart.node_tree.nodes.get('Material Output')
+
+    textCoor = material_PieChart.node_tree.nodes.new('ShaderNodeTexCoord')
+
+    gradTex = material_PieChart.node_tree.nodes.new('ShaderNodeTexGradient')
+
+    colorRamp = material_PieChart.node_tree.nodes.new('ShaderNodeValToRGB')
+
+    DiffBSDF = material_PieChart.node_tree.nodes.new('ShaderNodeBsdfDiffuse')
+
+    gradTex.gradient_type = 'RADIAL'
+
+
+    colorRamp.color_ramp.interpolation = 'CONSTANT'
+
+    colorRamp.color_ramp.elements.remove(colorRamp.color_ramp.elements[0])
+
+    # Adding new color stop at location 0.100
+    colorRamp.color_ramp.elements.new(winrate)
+    colorRamp.color_ramp.elements.new(winrate+looserate)
+    colorRamp.color_ramp.elements.new(1- winrate-looserate)
+
+    # Setting the color for the stop that we recently created
+    colorRamp.color_ramp.elements[0].color = (0,1,0,1) 
+    colorRamp.color_ramp.elements[1].color = (1,0,0,1)
+    colorRamp.color_ramp.elements[2].color = (0.6,0.6,0.6,1)
+
+
+    link = material_PieChart.node_tree.links.new
+
+    link(textCoor.outputs[3],gradTex.inputs[0])
+
+    link(gradTex.outputs[0],colorRamp.inputs[0])
+
+    link(colorRamp.outputs[0],DiffBSDF.inputs[0])
+
+    link(colorRamp.outputs[0],DiffBSDF.inputs[0])
+
+    link(DiffBSDF.outputs[0],material_out.inputs[0])
+
+    return material_PieChart
 
 
 def createCube(self, i, currentChamp, numberOfChamps, mat):
@@ -363,7 +429,7 @@ def createCubeTower(self, currentchamp, numberOfChamps, x, mat ):
 
     for z in range(int(currentchamp.points/1000)):
         #c_cube_size = random.uniform( self.cube_size_min, self.cube_size_max)
-        c_cube_size = self.cube_size_max - self.cube_size_min
+        c_cube_size = 1.5
         bpy.ops.mesh.primitive_cube_add(
             location=(-((numberOfChamps)/2 * 5) + (x-0.5)*5, 0, total_height + c_cube_size/2), size=(c_cube_size))
         total_height += c_cube_size
