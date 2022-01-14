@@ -134,8 +134,8 @@ class APIAddon(bpy.types.Operator):
 
     type_of_chart: bpy.props.EnumProperty(
         items={
-        ('Bar chart', 'Bar chart', 'Displays masterypoints in a Bar chart'),
-        ('Pie chart', 'Pie chart', 'Displays winrate in a Pie chart')},
+        ('BarChart', 'Bar-Chart', 'Displays masterypoints in a Bar chart'),
+        ('PieChart', 'Pie-Chart', 'Displays winrate in a Pie chart')},
                 
         name="Type of chart",
         description="Which type of chart do your want? Bar chart, Cake chart, ...",  
@@ -211,7 +211,7 @@ class APIAddon(bpy.types.Operator):
                 print("Didn't match a case") """
 
         ############# Bar Chart ###############
-        if self.type_of_chart == "Bar chart": 
+        if self.type_of_chart == "BarChart": 
             print("Bar-Chart")    
 
 
@@ -284,7 +284,7 @@ class APIAddon(bpy.types.Operator):
             bpy.context.object.rigid_body.type = 'PASSIVE'
         
         ##############################################################
-        elif self.type_of_chart == "Pie chart":
+        elif self.type_of_chart == "PieChart":
             print("Pie-Chart")    
 
             bpy.ops.mesh.primitive_cylinder_add(vertices=101,radius=4, depth=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))

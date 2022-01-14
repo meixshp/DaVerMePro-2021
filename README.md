@@ -18,7 +18,7 @@ Zeigt die Masterypoints der Champions an.
 ### Pie-Chart
 Zeigt die Winrate des Summoners an. 
 
-#### Bar-Chart nr. 1
+#### Pie-Chart
 <img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Pie-chart1.png">
 
 
