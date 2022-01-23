@@ -68,7 +68,7 @@ class champ(object):
 class APIAddon(bpy.types.Operator):
 
     bl_idname = "mesh.apivisual"
-    bl_label = "Visualise LOL-API"
+    bl_label = "LOL-API Visualizer"
     bl_description = "Generates meshes to visualise LOL-statistics"
     bl_info = {
         "name": "API Visualizer",
@@ -78,28 +78,45 @@ class APIAddon(bpy.types.Operator):
         "location": "Search menu",
         "description": "Generates meshes to visualise LOL-statistics",
         "warning": "",
-        "wiki_url": "",
+        "wiki_url": "https://github.com/meixshp/DaVerMePro-2021",
         "category": "Add Mesh",
     }
     bl_options = {"REGISTER", "UNDO"}
-    """ num: bpy.props.IntProperty(
-        name="Cube Number",
-        description="Defines the number of cubes",
-        default=5)
 
-    cube_size_min: bpy.props.FloatProperty(
-        name="Min Cube Size",
-        default=0.5)
+    summoner_Name: bpy.props.StringProperty(
+        name="Name of the Summoner",
+        description="Put your name which you are called in LOL here.",
+        default="veryfirstghost"
+    )
 
-    cube_size_max: bpy.props.FloatProperty(
-        name="Max Cube Size",
-        default=2.0)  """
+    riot_Token: bpy.props.StringProperty(
+        name="X-Riot-Token",
+        description="You need to generate a X-Riot-Token and put it here to get acces to the data.",
+        default="RGAPI-cc9b5c4d-96d5-499b-9cb7-acee7d0978df"
+    )
+
+    type_of_chart: bpy.props.EnumProperty(
+        items={
+        ('BarChart', 'Bar-Chart', 'Displays masterypoints in a Bar chart'),
+        ('PieChart', 'Pie-Chart', 'Displays winrate in a Pie chart')},
+                
+        name="Type of chart",
+        description="Which type of chart do your want? Bar chart, Cake chart, ...",  
+        default="BarChart"
+    )
+
+    type_of_Chart_Variant: bpy.props.IntProperty(
+        name="Type of Bar chart",
+        description="Which type of Bar chart do your want? 1 = cubes 2 = names 3 = cubetower.",  
+        default=1,
+        min=1,
+        max=3
+    )
 
     number_of_Champs: bpy.props.IntProperty(
         name="Number of Champions",
         description="How many Champions should be displayed? From top to bottom.",
         default=6)
-
 
     cube_color: bpy.props.FloatVectorProperty(
         name="Color of the bars",
@@ -118,38 +135,7 @@ class APIAddon(bpy.types.Operator):
         description="Choose which color the floor has.",
         default=(0.1, 0.1, 0.1),
         subtype="COLOR")
-
-
-    summoner_Name: bpy.props.StringProperty(
-        name="Name of the Summoner",
-        description="Put your name which you are called in LOL here.",
-        default="veryfirstghost"
-    )
-
-    riot_Token: bpy.props.StringProperty(
-        name="X-Riot-Token",
-        description="You need to generate a X-Riot-Token and put it here to get acces to the data.",
-        default="RGAPI-8213e50a-2ba8-4091-8b25-0937f0696671"
-    )
-
-    type_of_chart: bpy.props.EnumProperty(
-        items={
-        ('BarChart', 'Bar-Chart', 'Displays masterypoints in a Bar chart'),
-        ('PieChart', 'Pie-Chart', 'Displays winrate in a Pie chart')},
-                
-        name="Type of chart",
-        description="Which type of chart do your want? Bar chart, Cake chart, ...",  
-        default="BarChart"
-    )
-
-    type_of_BarChart: bpy.props.IntProperty(
-        name="Type of Bar chart",
-        description="Which type of Bar chart do your want? 1 = cubes 2 = names 3 = cubetower.",  
-        default=1,
-        min=1,
-        max=3
-    )
-    
+   
 
     @classmethod
     def poll(cls, context):
@@ -246,11 +232,11 @@ class APIAddon(bpy.types.Operator):
 
                 currentchamp = getCurrentChamp(self, championInfo, champions, i)
 
-                if self.type_of_BarChart == 1:
+                if self.type_of_Chart_Variant == 1:
                     createCube(self, x, currentchamp, self.number_of_Champs, cubeMat)
-                elif self.type_of_BarChart == 2:
+                elif self.type_of_Chart_Variant == 2:
                     createNameBars(self, i, currentchamp, self.number_of_Champs, cubeMat)
-                elif self.type_of_BarChart == 3:
+                elif self.type_of_Chart_Variant == 3:
                     createCubeTower(self, currentchamp, self.number_of_Champs, i, cubeMat) #creates the tower of small cubes
                 
                 
@@ -286,18 +272,28 @@ class APIAddon(bpy.types.Operator):
         ##############################################################
         elif self.type_of_chart == "PieChart":
             print("Pie-Chart")    
+            bpy.context.space_data.shading.type = 'MATERIAL'
 
-            bpy.ops.mesh.primitive_cylinder_add(vertices=101,radius=4, depth=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
 
-            ob = bpy.context.active_object
-            mat = createMaterialPieChart(self,0.7,0.2)
 
-            if ob.data.materials:
-                # assign to 1st material slot
-                ob.data.materials[0] = mat
-            else:
-                # no slots
-                ob.data.materials.append(mat)
+            if self.type_of_Chart_Variant == 1:
+                print("var1")
+                bpy.ops.mesh.primitive_cylinder_add(vertices=101,radius=4, depth=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+                ob = bpy.context.active_object
+                mat = createMaterialPieChart(self,0.7,0.2) # creates the material of the cylinder. 2nd parameter is the winrate, 3rd is the looserate
+
+                if ob.data.materials:
+                    # assign to 1st material slot
+                    ob.data.materials[0] = mat
+                else:
+                    # no slots
+                    ob.data.materials.append(mat)
+            elif self.type_of_Chart_Variant == 2:
+                print("var2")
+            elif self.type_of_Chart_Variant == 3:
+                print("var3")
+
+           
 
 
         #except:
@@ -305,6 +301,26 @@ class APIAddon(bpy.types.Operator):
         #    self.report({'ERROR'}, 'Riot-Token is probably to old or the summonerName is Wrong.')
 
         return {"FINISHED"}
+
+class barPanel(bpy.types.Panel):
+    bl_idname = "panel.panel1"
+    bl_label = "Panel1"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "WINDOW"
+    bl_info = {
+        "name": "Bar Chart",
+        "author": "Champions",
+        "version": (1, 0),
+        "blender": (2, 80, 0),
+        "location": "Search menu",
+        "description": "Generates meshes to visualise LOL-statistics",
+        "warning": "",
+        "wiki_url": "https://github.com/meixshp/DaVerMePro-2021"
+    }
+    #bl_category = "Panel1"
+ 
+    def draw(self, context):
+        self.layout.operator("mesh.add_cube_sample", icon='MESH_CUBE', text="Add Cube 1")
 
 def createMaterialPieChart(self,winrate,looserate):
     material_PieChart = bpy.data.materials.new(name= "Material_PieChart")
@@ -365,6 +381,8 @@ def createCube(self, i, currentChamp, numberOfChamps, mat):
     bpy.context.object.color = (
         self.cube_color.r, self.cube_color.g, self.cube_color.b, 1)
     ob = bpy.context.active_object
+
+    ob.name = currentChamp.name + "-Bar"
     #bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
     #bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
 
@@ -378,11 +396,11 @@ def createCube(self, i, currentChamp, numberOfChamps, mat):
         ob.data.materials.append(mat)
 
 
-def createNameBars(self, i, currentchamp, numberOfChamps, mat):
-    scaleFac = currentchamp.points / 10000 *3
+def createNameBars(self, i, currentChamp, numberOfChamps, mat):
+    scaleFac = currentChamp.points / 10000 *3
 
     bpy.data.curves.new(
-        type="FONT", name=f"Font Bars{i}").body = currentchamp.name 
+        type="FONT", name=f"Font Bars{i}").body = currentChamp.name 
     font_obj = bpy.data.objects.new(
         name=f"Font BarsObj{i}", object_data=bpy.data.curves[f"Font Bars{i}"])
     bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
@@ -398,11 +416,12 @@ def createNameBars(self, i, currentchamp, numberOfChamps, mat):
 
     bpy.data.curves[f"Font Bars{i}"].materials.append(mat)
     bpy.data.curves[f"Font Bars{i}"].extrude = 0.3
+    font_obj.name = currentChamp.name + "-Bar"
 
 
-def setNames(self, currentchamp, mat, i, numberOfChamps):
+def setNames(self, currentChamp, mat, i, numberOfChamps):
     bpy.data.curves.new(
-        type="FONT", name=f"Font Curve{i}").body = currentchamp.name
+        type="FONT", name=f"Font Curve{i}").body = currentChamp.name
     font_obj = bpy.data.objects.new(
         name=f"Font Object{i}", object_data=bpy.data.curves[f"Font Curve{i}"])
     bpy.context.scene.collection.objects.link(font_obj)
@@ -413,6 +432,7 @@ def setNames(self, currentchamp, mat, i, numberOfChamps):
 
     bpy.data.curves[f"Font Curve{i}"].materials.append(mat)
     bpy.data.curves[f"Font Curve{i}"].extrude = 0.1
+    font_obj.name = currentChamp.name + "-Font"
 
 
 def getCurrentChamp(self, championInfo, champions, i):
@@ -469,11 +489,14 @@ def menu_func(self, context):
 def register():
     bpy.types.VIEW3D_MT_mesh_add.append(menu_func)
     bpy.utils.register_class(APIAddon)
+    bpy.utils.register_class(barPanel)
 
 
 def unregister():
     bpy.types.VIEW3D_MT_mesh_add.remove(menu_func)
     bpy.utils.unregister_class(APIAddon)
+    bpy.utils.unregister_class(barPanel)
+
 
 
 if __name__ == "__main__":
