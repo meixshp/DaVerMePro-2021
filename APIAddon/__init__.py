@@ -34,6 +34,13 @@ bl_info = {
     CAKECHART = 2 """
 
 
+class accountData(object):
+    def __init__(self, puuid, gameName, tagLine):
+        self.puuid = puuid
+        self.gameName = gameName
+        self.tagLine = tagLine
+
+
 class account(object):
     def __init__(self, id, accountId, puuid, name, profileIconId, revisionDate, summonerLevel):
         self.id = id
@@ -89,6 +96,12 @@ class APIAddon(bpy.types.Operator):
         default="veryfirstghost"
     )
 
+    summoner_TagLine: bpy.props.StringProperty(
+        name="Tagline of the Summoner",
+        description="Put your tagline here, content following the hashtag (#).",
+        default="EUW"
+    )
+
     riot_Token: bpy.props.StringProperty(
         name="X-Riot-Token",
         description="You need to generate a X-Riot-Token and put it here to get acces to the data.",
@@ -97,17 +110,17 @@ class APIAddon(bpy.types.Operator):
 
     type_of_chart: bpy.props.EnumProperty(
         items={
-        ('BarChart', 'Bar-Chart', 'Displays masterypoints in a Bar chart'),
-        ('PieChart', 'Pie-Chart', 'Displays winrate in a Pie chart')},
-                
+            ('BarChart', 'Bar-Chart', 'Displays masterypoints in a Bar chart'),
+            ('PieChart', 'Pie-Chart', 'Displays winrate in a Pie chart')},
+
         name="Type of chart",
-        description="Which type of chart do your want? Bar chart, Cake chart, ...",  
+        description="Which type of chart do your want? Bar chart, Cake chart, ...",
         default="BarChart"
     )
 
     type_of_Chart_Variant: bpy.props.IntProperty(
         name="Type of Bar chart",
-        description="Which type of Bar chart do your want? 1 = cubes 2 = names 3 = cubetower.",  
+        description="Which type of Bar chart do your want? 1 = cubes 2 = names 3 = cubetower.",
         default=1,
         min=1,
         max=3
@@ -135,7 +148,6 @@ class APIAddon(bpy.types.Operator):
         description="Choose which color the floor has.",
         default=(0.1, 0.1, 0.1),
         subtype="COLOR")
-   
 
     @classmethod
     def poll(cls, context):
@@ -148,12 +160,18 @@ class APIAddon(bpy.types.Operator):
         # print(r.json())
 
         summonerName = f"{self.summoner_Name}"
-        requestString = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}"
+        summerTagline = f"{self.summoner_TagLine}"
+        # requestString = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}"
+        puuid = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summonerName}/{summerTagline}"
+
         header = {
             'X-Riot-Token': self.riot_Token,
         }
         # puuid: _cXJlH3kUv3IMeizi3eCDmeTGkABlml-BIf3298QmsV2wqO-PluzmY6Y3cermq-BSVHwWW8f5Alt_Q
 
+        getPuuid = requests.get(puuid, headers=header)
+        idFromPuuid = accountData(**getPuuid.json())
+        requestString = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{idFromPuuid.puuid}"
         resp = requests.get(requestString, headers=header)
         # print(resp.json())
 
@@ -163,7 +181,7 @@ class APIAddon(bpy.types.Operator):
         # resp.decode('utf-8')
         #summunor_dict = resp.json()
         #summunor_obj = Summoner(**summunor_dict)
-        #try:
+        # try:
         s = account(**resp.json())
 
         #print(f"name: {s.name}")
@@ -197,9 +215,8 @@ class APIAddon(bpy.types.Operator):
                 print("Didn't match a case") """
 
         ############# Bar Chart ###############
-        if self.type_of_chart == "BarChart": 
-            print("Bar-Chart")    
-
+        if self.type_of_chart == "BarChart":
+            print("Bar-Chart")
 
             fontMat = bpy.data.materials.get("FontMaterial")
             if fontMat is None:
@@ -216,7 +233,7 @@ class APIAddon(bpy.types.Operator):
                 cubeMat = bpy.data.materials.new(name="CubeMaterial")
             cubeMat.diffuse_color = (
                 self.cube_color.r, self.cube_color.g, self.cube_color.b, 1)
-            
+
             planeMat = bpy.data.materials.get("PlaneMaterial")
             if planeMat is None:
                 # create material
@@ -230,18 +247,22 @@ class APIAddon(bpy.types.Operator):
             for x in range(self.number_of_Champs):
                 # for champ in champs:
 
-                currentchamp = getCurrentChamp(self, championInfo, champions, i)
+                currentchamp = getCurrentChamp(
+                    self, championInfo, champions, i)
 
                 if self.type_of_Chart_Variant == 1:
-                    createCube(self, x, currentchamp, self.number_of_Champs, cubeMat)
+                    createCube(self, x, currentchamp,
+                               self.number_of_Champs, cubeMat)
                 elif self.type_of_Chart_Variant == 2:
-                    createNameBars(self, i, currentchamp, self.number_of_Champs, cubeMat)
+                    createNameBars(self, i, currentchamp,
+                                   self.number_of_Champs, cubeMat)
                 elif self.type_of_Chart_Variant == 3:
-                    createCubeTower(self, currentchamp, self.number_of_Champs, i, cubeMat) #creates the tower of small cubes
-                
-                
+                    # creates the tower of small cubes
+                    createCubeTower(self, currentchamp,
+                                    self.number_of_Champs, i, cubeMat)
+
                 setNames(self, currentchamp, fontMat, i, self.number_of_Champs)
-                
+
                 # print("help")
                 print(currentchamp.name)
 
@@ -254,8 +275,8 @@ class APIAddon(bpy.types.Operator):
             bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0))
             bpy.context.object.dimensions = (5 + self.number_of_Champs*5, 7, 1)
             ob = bpy.context.active_object
-            #bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
-            #bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+            # bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
+            # bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
 
             # Get material
 
@@ -268,19 +289,19 @@ class APIAddon(bpy.types.Operator):
             #bpy.ops.transform.resize(value=(7+ self.number_of_Champs*2, 7, 1))
             bpy.ops.rigidbody.object_add()
             bpy.context.object.rigid_body.type = 'PASSIVE'
-        
+
         ##############################################################
         elif self.type_of_chart == "PieChart":
-            print("Pie-Chart")    
+            print("Pie-Chart")
             bpy.context.space_data.shading.type = 'MATERIAL'
-
-
 
             if self.type_of_Chart_Variant == 1:
                 print("var1")
-                bpy.ops.mesh.primitive_cylinder_add(vertices=101,radius=4, depth=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+                bpy.ops.mesh.primitive_cylinder_add(
+                    vertices=101, radius=4, depth=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
                 ob = bpy.context.active_object
-                mat = createMaterialPieChart(self,0.7,0.2) # creates the material of the cylinder. 2nd parameter is the winrate, 3rd is the looserate
+                # creates the material of the cylinder. 2nd parameter is the winrate, 3rd is the looserate
+                mat = createMaterialPieChart(self, 0.7, 0.2)
 
                 if ob.data.materials:
                     # assign to 1st material slot
@@ -293,14 +314,12 @@ class APIAddon(bpy.types.Operator):
             elif self.type_of_Chart_Variant == 3:
                 print("var3")
 
-           
-
-
-        #except:
+        # except:
         #    print("Riot-Token is probably too old or the summonerName is Wrong")
         #    self.report({'ERROR'}, 'Riot-Token is probably to old or the summonerName is Wrong.')
 
         return {"FINISHED"}
+
 
 class barPanel(bpy.types.Panel):
     bl_idname = "panel.panel1"
@@ -318,18 +337,18 @@ class barPanel(bpy.types.Panel):
         "wiki_url": "https://github.com/meixshp/DaVerMePro-2021"
     }
     #bl_category = "Panel1"
- 
+
     def draw(self, context):
-        self.layout.operator("mesh.add_cube_sample", icon='MESH_CUBE', text="Add Cube 1")
+        self.layout.operator("mesh.add_cube_sample",
+                             icon='MESH_CUBE', text="Add Cube 1")
 
-def createMaterialPieChart(self,winrate,looserate):
-    material_PieChart = bpy.data.materials.new(name= "Material_PieChart")
+
+def createMaterialPieChart(self, winrate, looserate):
+    material_PieChart = bpy.data.materials.new(name="Material_PieChart")
     material_PieChart.use_nodes = True
-
 
     principled_node = material_PieChart.node_tree.nodes.get('Principled BSDF')
     material_PieChart.node_tree.nodes.remove(principled_node)
-
 
     material_out = material_PieChart.node_tree.nodes.get('Material Output')
 
@@ -343,7 +362,6 @@ def createMaterialPieChart(self,winrate,looserate):
 
     gradTex.gradient_type = 'RADIAL'
 
-
     colorRamp.color_ramp.interpolation = 'CONSTANT'
 
     colorRamp.color_ramp.elements.remove(colorRamp.color_ramp.elements[0])
@@ -351,25 +369,24 @@ def createMaterialPieChart(self,winrate,looserate):
     # Adding new color stop at location 0.100
     colorRamp.color_ramp.elements.new(winrate)
     colorRamp.color_ramp.elements.new(winrate+looserate)
-    colorRamp.color_ramp.elements.new(1- winrate-looserate)
+    colorRamp.color_ramp.elements.new(1 - winrate-looserate)
 
     # Setting the color for the stop that we recently created
-    colorRamp.color_ramp.elements[0].color = (0,1,0,1) 
-    colorRamp.color_ramp.elements[1].color = (1,0,0,1)
-    colorRamp.color_ramp.elements[2].color = (0.6,0.6,0.6,1)
-
+    colorRamp.color_ramp.elements[0].color = (0, 1, 0, 1)
+    colorRamp.color_ramp.elements[1].color = (1, 0, 0, 1)
+    colorRamp.color_ramp.elements[2].color = (0.6, 0.6, 0.6, 1)
 
     link = material_PieChart.node_tree.links.new
 
-    link(textCoor.outputs[3],gradTex.inputs[0])
+    link(textCoor.outputs[3], gradTex.inputs[0])
 
-    link(gradTex.outputs[0],colorRamp.inputs[0])
+    link(gradTex.outputs[0], colorRamp.inputs[0])
 
-    link(colorRamp.outputs[0],DiffBSDF.inputs[0])
+    link(colorRamp.outputs[0], DiffBSDF.inputs[0])
 
-    link(colorRamp.outputs[0],DiffBSDF.inputs[0])
+    link(colorRamp.outputs[0], DiffBSDF.inputs[0])
 
-    link(DiffBSDF.outputs[0],material_out.inputs[0])
+    link(DiffBSDF.outputs[0], material_out.inputs[0])
 
     return material_PieChart
 
@@ -383,8 +400,8 @@ def createCube(self, i, currentChamp, numberOfChamps, mat):
     ob = bpy.context.active_object
 
     ob.name = currentChamp.name + "-Bar"
-    #bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
-    #bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+    # bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
+    # bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
 
     # Get material
 
@@ -397,21 +414,22 @@ def createCube(self, i, currentChamp, numberOfChamps, mat):
 
 
 def createNameBars(self, i, currentChamp, numberOfChamps, mat):
-    scaleFac = currentChamp.points / 10000 *3
+    scaleFac = currentChamp.points / 10000 * 3
 
     bpy.data.curves.new(
-        type="FONT", name=f"Font Bars{i}").body = currentChamp.name 
+        type="FONT", name=f"Font Bars{i}").body = currentChamp.name
     font_obj = bpy.data.objects.new(
         name=f"Font BarsObj{i}", object_data=bpy.data.curves[f"Font Bars{i}"])
     bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
     bpy.context.scene.collection.objects.link(font_obj)
 
-    font_obj.location = (-((numberOfChamps)/2 * 5) + (i+0.5)*5 + font_obj.dimensions.x/4, 0, 0)
-    #bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
+    font_obj.location = (-((numberOfChamps)/2 * 5) + (i+0.5)
+                         * 5 + font_obj.dimensions.x/4, 0, 0)
+    # bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
     font_obj.dimensions = (scaleFac, 2, 1)
     bpy.data.objects[f"Font BarsObj{i}"].rotation_euler[0] = 1.5708
     bpy.data.objects[f"Font BarsObj{i}"].rotation_euler[1] = -1.5708
-    #font_obj.rotation_quaternion = (1,1,1,45) 
+    #font_obj.rotation_quaternion = (1,1,1,45)
     #font_obj.rotation_euler.y = 90
 
     bpy.data.curves[f"Font Bars{i}"].materials.append(mat)
@@ -448,7 +466,7 @@ def getCurrentChamp(self, championInfo, champions, i):
 
 
 # creates the tower of small cubes with names in front
-def createCubeTower(self, currentchamp, numberOfChamps, x, mat ):
+def createCubeTower(self, currentchamp, numberOfChamps, x, mat):
     total_height = 0
     rand_offset = 0.4
 
@@ -469,8 +487,8 @@ def createCubeTower(self, currentchamp, numberOfChamps, x, mat ):
         bpy.context.object.color = (
             self.cube_color.r, self.cube_color.g, self.cube_color.b, random.uniform(0.5, 1))
         ob = bpy.context.active_object
-        #bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
-        #bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+        # bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
+        # bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
 
         # Get material
 
@@ -496,7 +514,6 @@ def unregister():
     bpy.types.VIEW3D_MT_mesh_add.remove(menu_func)
     bpy.utils.unregister_class(APIAddon)
     bpy.utils.unregister_class(barPanel)
-
 
 
 if __name__ == "__main__":
