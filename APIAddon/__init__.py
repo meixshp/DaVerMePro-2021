@@ -11,7 +11,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from multiprocessing.dummy import Array
 import bpy
 import requests
 import json
@@ -19,11 +18,11 @@ import random
 #import enum
 
 bl_info = {
-    "name": "APIAddon",
+    "name": "API Visualizer",
     "author": "Champions",
     "description": "",
     "blender": (2, 80, 0),
-    "version": (0, 0, 1),
+    "version": (1, 0, 0),
     "location": "",
     "warning": "",
     "category": "Generic"
@@ -93,7 +92,7 @@ class APIAddon(bpy.types.Operator):
     summoner_Name: bpy.props.StringProperty(
         name="Name of the Summoner",
         description="Put your name which you are called in LOL here.",
-        default="veryfirstghost"
+        default="HIDE ON SHROUD"
     )
 
     summoner_TagLine: bpy.props.StringProperty(
@@ -105,7 +104,7 @@ class APIAddon(bpy.types.Operator):
     riot_Token: bpy.props.StringProperty(
         name="X-Riot-Token",
         description="You need to generate a X-Riot-Token and put it here to get acces to the data.",
-        default="RGAPI-cc9b5c4d-96d5-499b-9cb7-acee7d0978df"
+        default="RGAPI-300ea022-e148-40a1-93a3-744738cb9a44"
     )
 
     type_of_chart: bpy.props.EnumProperty(
@@ -188,8 +187,19 @@ class APIAddon(bpy.types.Operator):
         #print(f"id: {s.id}")
 
         requestChampionMasteryString = f"https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{s.id}"
+
+
         resp = requests.get(requestChampionMasteryString, headers=header)
-        # print(resp.json())
+        #print(resp.json())
+
+        requestLeagueEntries= f"https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/{s.id}"
+
+        respEntries = requests.get(requestLeagueEntries, headers=header)
+        #print(respEntries.text)
+
+        
+
+        #print(f"Wins:{leagueEntries[2]["championId"]} ")
 
         requestChampionNames = f"http://ddragon.leagueoflegends.com/cdn/11.20.1/data/en_US/champion.json"
         respNames = requests.get(requestChampionNames)
@@ -200,6 +210,10 @@ class APIAddon(bpy.types.Operator):
 
         champions = json.loads(resp.text)
         print(f"length of summoners: {len(champions)}")
+
+        
+        leagueEntries = json.loads(respEntries.text)
+        #print(leagueEntries)
 
         bpy.ops.object.select_all(action='SELECT')  # selektiert alle Objekte
         # löscht selektierte objekte
@@ -290,29 +304,37 @@ class APIAddon(bpy.types.Operator):
             bpy.ops.rigidbody.object_add()
             bpy.context.object.rigid_body.type = 'PASSIVE'
 
-        ##############################################################
+        ########################## Pie Chart ####################################
         elif self.type_of_chart == "PieChart":
-            print("Pie-Chart")
-            bpy.context.space_data.shading.type = 'MATERIAL'
+            if respEntries.text != "[]":
+                print("Pie-Chart")
+                bpy.context.space_data.shading.type = 'MATERIAL'
 
-            if self.type_of_Chart_Variant == 1:
-                print("var1")
-                bpy.ops.mesh.primitive_cylinder_add(
-                    vertices=101, radius=4, depth=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
-                ob = bpy.context.active_object
-                # creates the material of the cylinder. 2nd parameter is the winrate, 3rd is the looserate
-                mat = createMaterialPieChart(self, 0.7, 0.2)
+                if self.type_of_Chart_Variant == 1:
+                    print("var1")
+                    bpy.ops.mesh.primitive_cylinder_add(
+                        vertices=101, radius=4, depth=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+                    ob = bpy.context.active_object
+                    # creates the material of the cylinder. 2nd parameter is the winrate, 3rd is the looserate
+                    wins = leagueEntries[0]["wins"]
+                    losses = leagueEntries[0]["losses"]
+                    winrate =  wins/ (wins + losses) 
+                    looserate = losses / (wins + losses)
+                    print(f"wins: {wins} losses: {losses} winrate: {winrate} looserate: {looserate}")
+                    mat = createMaterialPieChart(self, winrate, looserate)
 
-                if ob.data.materials:
-                    # assign to 1st material slot
-                    ob.data.materials[0] = mat
-                else:
-                    # no slots
-                    ob.data.materials.append(mat)
-            elif self.type_of_Chart_Variant == 2:
-                print("var2")
-            elif self.type_of_Chart_Variant == 3:
-                print("var3")
+                    if ob.data.materials:
+                        # assign to 1st material slot
+                        ob.data.materials[0] = mat
+                    else:
+                        # no slots
+                        ob.data.materials.append(mat)
+                elif self.type_of_Chart_Variant == 2:
+                    print("var2")
+                elif self.type_of_Chart_Variant == 3:
+                    print("var3")
+            else:
+                self.report({'ERROR'}, 'It seems there are Data for your ranked games. You need to be placed in a rank for this to work.')
 
         # except:
         #    print("Riot-Token is probably too old or the summonerName is Wrong")
@@ -341,6 +363,15 @@ class barPanel(bpy.types.Panel):
     def draw(self, context):
         self.layout.operator("mesh.add_cube_sample",
                              icon='MESH_CUBE', text="Add Cube 1")
+
+class panel2(bpy.types.Panel):
+    bl_idname = "panel.panel2"
+    bl_label = "Panel2"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOL_PROPS"
+ 
+    def draw(self, context):
+        self.layout.operator("mesh.add_cube_sample", icon='MESH_CUBE', text="Add Cube 2")
 
 
 def createMaterialPieChart(self, winrate, looserate):
