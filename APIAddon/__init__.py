@@ -317,44 +317,75 @@ class APIAddon(bpy.types.Operator):
                         print("Pie-Chart")
                         bpy.context.space_data.shading.type = 'MATERIAL'
 
-                        if self.type_of_Chart_Variant == 1:
-                            print("var1")
-                            bpy.ops.mesh.primitive_cylinder_add(
-                                vertices=101, radius=4, depth=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
-                            ob = bpy.context.active_object
-                            # creates the material of the cylinder. 2nd parameter is the winrate, 3rd is the looserate
-                            wins = leagueEntries[0]["wins"]
-                            losses = leagueEntries[0]["losses"]
-                            winrate =  wins/ (wins + losses) 
-                            looserate = losses / (wins + losses)
-                            print(f"wins: {wins} losses: {losses} winrate: {winrate} looserate: {looserate}")
-                            mat = createMaterialPieChart(self, winrate, looserate)
+                        print("var1")
+                        bpy.ops.mesh.primitive_cylinder_add(
+                            vertices=101, radius=4, depth=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+                        ob = bpy.context.active_object
+                        # creates the material of the cylinder. 2nd parameter is the winrate, 3rd is the looserate
+                        wins = leagueEntries[0]["wins"]
+                        losses = leagueEntries[0]["losses"]
+                        winrate =  wins/ (wins + losses) 
+                        looserate = losses / (wins + losses)
+                        print(f"wins: {wins} losses: {losses} winrate: {winrate} looserate: {looserate}")
+                        mat = createMaterialPieChart(self, winrate, looserate)
 
-                            if ob.data.materials:
-                                # assign to 1st material slot
-                                ob.data.materials[0] = mat
-                            else:
-                                # no slots
-                                ob.data.materials.append(mat)
-                        elif self.type_of_Chart_Variant == 2:
-                            print("var2")
-                        elif self.type_of_Chart_Variant == 3:
-                            print("var3")
+                        if ob.data.materials:
+                            # assign to 1st material slot
+                            ob.data.materials[0] = mat
+                        else:
+                            # no slots
+                            ob.data.materials.append(mat)
+                        
                     else:
                         self.report({'ERROR'}, 'It seems there are Data for your ranked games. You need to be placed in a rank for this to work.')      
 
         return {"FINISHED"}
     
-    """ def draw(self, context):
+    def draw(self, context):
         self.layout.use_property_split = True
 
-        row = self.layout.row()
-        row.prop(self, "flag_prop")
+        row1 = self.layout.row()
+        row1.prop(self, "summoner_Name")
+
+        row2 = self.layout.row()
+        row2.prop(self, "summoner_TagLine")
+
+        row3 = self.layout.row()
+        row3.prop(self, "riot_Token")
+
+        row4 = self.layout.row()
+        row4.prop(self, "type_of_chart")
+
         
-        sub = row.row()
-        sub.enabled = self.flag_prop
-        sub.prop(self, "dependent_prop", text="")
- """
+
+
+        if self.type_of_chart == "BarChart":
+            row5 = self.layout.row()
+            row5.prop(self, "type_of_Chart_Variant")
+
+            row6 = self.layout.row()
+            row6.prop(self, "number_of_Champs")
+            
+            row7 = self.layout.row()
+            row7.prop(self, "cube_color")
+
+            row8 = self.layout.row()
+            row8.prop(self, "name_color")
+
+            row9 = self.layout.row()
+            row9.prop(self, "plane_color")  
+
+            """ row5.enabled = True 
+            row6.enabled = True
+            row7.enabled = True
+            row8.enabled = True
+            row9.enabled = True """
+        elif self.type_of_chart == "PieChart":
+            """ row5.enabled = False
+            row6.enabled = False
+            row7.enabled = False
+            row8.enabled = False
+            row9.enabled = False """
 
 
 def createMaterialPieChart(self, winrate, looserate):
