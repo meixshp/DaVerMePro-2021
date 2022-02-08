@@ -115,12 +115,15 @@ class APIAddon(bpy.types.Operator):
         default="BarChart"
     )
 
-    type_of_Chart_Variant: bpy.props.IntProperty(
+    type_of_Chart_Variant: bpy.props.EnumProperty(
+        items={
+            ('CubeBars', 'Cube-Bars', 'Bars out of tall cubes.'),
+            ('NameBars', 'Name-Bars', 'Bars out of Names.'),
+            ('CubeTowerBars', 'Cubetower-Bars', 'Bars out of many cubes which are rigged.')},
+
         name="Type of Bar chart",
-        description="Which type of Bar chart do your want? 1 = cubes 2 = names 3 = cubetower.",
+        description="Which type of Bar chart do your want?",
         default=1,
-        min=1,
-        max=3
     )
 
     number_of_Champs: bpy.props.IntProperty(
@@ -272,13 +275,13 @@ class APIAddon(bpy.types.Operator):
                             currentchamp = getCurrentChamp(
                                 self, championInfo, champions, i)
 
-                            if self.type_of_Chart_Variant == 1:
+                            if self.type_of_Chart_Variant == "CubeBars":
                                 createCube(self, x, currentchamp,
                                         self.number_of_Champs, cubeMat, masteryPointsMax, maxHeight)
-                            elif self.type_of_Chart_Variant == 2:
+                            elif self.type_of_Chart_Variant == "NameBars":
                                 createNameBars(self, i, currentchamp,
                                             self.number_of_Champs, cubeMat,masteryPointsMax, maxHeight)
-                            elif self.type_of_Chart_Variant == 3:
+                            elif self.type_of_Chart_Variant == "CubeTowerBars":
                                 # creates the tower of small cubes
                                 createCubeTower(self, currentchamp,
                                                 self.number_of_Champs, i, cubeMat, masteryPointsMax, maxHeight)
@@ -298,6 +301,8 @@ class APIAddon(bpy.types.Operator):
                     except: 
                         print(f"It seems there isn't enough data  for {self.number_of_Champs} champions to be displayed")
                         self.report({'ERROR'}, f"It seems there isn't enough data for {self.number_of_Champs} champions to be displayed")
+
+                   
 
                     bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0))
                     bpy.context.object.dimensions = (5 + self.number_of_Champs*5, 7, 1)
@@ -513,6 +518,9 @@ class APIAddon(bpy.types.Operator):
             row7.enabled = False
             row8.enabled = False
             row9.enabled = False """
+        elif self.type_of_chart == "RankDisplay":
+            row8 = self.layout.row()
+            row8.prop(self, "name_color")
 
 
 def createMaterialPieChart(self, winrate, looserate):
@@ -590,13 +598,16 @@ def createCube(self, i, currentChamp, numberOfChamps, mat, masteryPointsMax, max
         ob.data.materials.append(mat)
 
 def addScale( self, masteryPointsMax, maxHeight, numberOfChamps, mat):
+    scaleString = f"{masteryPointsMax}"
+    for x in range(numberOfChamps):
+        scaleString += "__________" 
     bpy.data.curves.new(
-        type="FONT", name=f"Scale Font").body = f"{masteryPointsMax}"
+        type="FONT", name=f"Scale Font").body = scaleString
     font_obj = bpy.data.objects.new(
         name=f"Scale Font", object_data=bpy.data.curves[f"Scale Font"])
     bpy.context.scene.collection.objects.link(font_obj)
 
-    font_obj.location = (- ((numberOfChamps)/2 * 5) - font_obj.dimensions.x ,0, maxHeight)
+    font_obj.location = (- ((numberOfChamps)/2 * 5) - 3 ,0, maxHeight)
     font_obj.rotation_euler[0] = 1.5708
 
     bpy.data.curves[f"Scale Font"].materials.append(mat)
@@ -663,9 +674,9 @@ def createCubeTower(self, currentChamp, numberOfChamps, x, mat, masteryPointsMax
     total_height = 0
     rand_offset = 0.4
 
-    for z in range(int(height)):
+    for z in range(int(height*(5/3))):
         # c_cube_size = random.uniform( self.cube_size_min, self.cube_size_max)
-        c_cube_size = 1
+        c_cube_size = 1*(3/5)
         bpy.ops.mesh.primitive_cube_add(
             location=(-((numberOfChamps)/2 * 5) + (x+0.5)*5, 0, total_height + c_cube_size/2), size=(c_cube_size))
         total_height += c_cube_size
