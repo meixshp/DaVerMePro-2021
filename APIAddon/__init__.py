@@ -28,10 +28,7 @@ bl_info = {
     "category": "Generic"
 }
 
-""" class charts(enum):
-    BARCHART = 1
-    CAKECHART = 2 """
-
+global scaleFac
 
 class accountData(object):
     def __init__(self, puuid, gameName, tagLine):
@@ -104,13 +101,14 @@ class APIAddon(bpy.types.Operator):
     riot_Token: bpy.props.StringProperty(
         name="X-Riot-Token",
         description="You need to generate a X-Riot-Token and put it here to get acces to the data.",
-        default="RGAPI-9fcce1c9-9024-453a-92fa-0569d61b71b9"
+        default="RGAPI-2879b46d-cf86-42a6-99bd-40c581c908eb"
     )
 
     type_of_chart: bpy.props.EnumProperty(
         items={
             ('BarChart', 'Bar-Chart', 'Displays masterypoints in a Bar chart'),
-            ('PieChart', 'Pie-Chart', 'Displays winrate in a Pie chart')},
+            ('PieChart', 'Pie-Chart', 'Displays winrate in a Pie chart'),
+            ('RankDisplay', 'Display Rank', 'Displays Rank')},
 
         name="Type of chart",
         description="Which type of chart do your want? Bar chart, Cake chart, ...",
@@ -147,6 +145,8 @@ class APIAddon(bpy.types.Operator):
         description="Choose which color the floor has.",
         default=(0.1, 0.1, 0.1),
         subtype="COLOR")
+
+    scaleFac1: float = 0
 
     @classmethod
     def poll(cls, context):
@@ -262,36 +262,42 @@ class APIAddon(bpy.types.Operator):
                         self.plane_color.r, self.plane_color.g, self.plane_color.b, 1)
 
                     i = 0
-
+                    masteryPointsMax = getCurrentChamp(self, championInfo, champions, 0).points
                     # for y in range(2):
-                    for x in range(self.number_of_Champs):
-                        # for champ in champs:
+                    try: 
+                        for x in range(self.number_of_Champs):
+                            # for champ in champs:
 
-                        currentchamp = getCurrentChamp(
-                            self, championInfo, champions, i)
+                            maxHeight = 40 # max Height of Bars
+                            currentchamp = getCurrentChamp(
+                                self, championInfo, champions, i)
 
-                        if self.type_of_Chart_Variant == 1:
-                            createCube(self, x, currentchamp,
-                                    self.number_of_Champs, cubeMat)
-                        elif self.type_of_Chart_Variant == 2:
-                            createNameBars(self, i, currentchamp,
-                                        self.number_of_Champs, cubeMat)
-                        elif self.type_of_Chart_Variant == 3:
-                            # creates the tower of small cubes
-                            createCubeTower(self, currentchamp,
-                                            self.number_of_Champs, i, cubeMat)
-                            self.report({'INFO'}, "Press play to see the tower crumble :)")
+                            if self.type_of_Chart_Variant == 1:
+                                createCube(self, x, currentchamp,
+                                        self.number_of_Champs, cubeMat, masteryPointsMax, maxHeight)
+                            elif self.type_of_Chart_Variant == 2:
+                                createNameBars(self, i, currentchamp,
+                                            self.number_of_Champs, cubeMat,masteryPointsMax, maxHeight)
+                            elif self.type_of_Chart_Variant == 3:
+                                # creates the tower of small cubes
+                                createCubeTower(self, currentchamp,
+                                                self.number_of_Champs, i, cubeMat, masteryPointsMax, maxHeight)
+                                self.report({'INFO'}, "Press play to see the tower crumble :)")
 
-                        setNames(self, currentchamp, fontMat, i, self.number_of_Champs)
+                            setNames(self, currentchamp, fontMat, i, self.number_of_Champs)
+                            addScale(self, masteryPointsMax, maxHeight, self.number_of_Champs, fontMat)
 
-                        # print("help")
-                        print(currentchamp.name)
+                            # print("help")
+                            print(currentchamp.name)
 
-                        print(f"i: {i}")
-                        print(f"ChPoints: {currentchamp.points}")
-                        print(f"ChId: {currentchamp.id}")
-                        print("")
-                        i += 1
+                            print(f"i: {i}")
+                            print(f"ChPoints: {currentchamp.points}")
+                            print(f"ChId: {currentchamp.id}")
+                            print("")
+                            i += 1
+                    except: 
+                        print(f"It seems there isn't enough data  for {self.number_of_Champs} champions to be displayed")
+                        self.report({'ERROR'}, f"It seems there isn't enough data for {self.number_of_Champs} champions to be displayed")
 
                     bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0))
                     bpy.context.object.dimensions = (5 + self.number_of_Champs*5, 7, 1)
@@ -321,12 +327,13 @@ class APIAddon(bpy.types.Operator):
                         bpy.ops.mesh.primitive_cylinder_add(
                             vertices=101, radius=4, depth=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
                         ob = bpy.context.active_object
-                        # creates the material of the cylinder. 2nd parameter is the winrate, 3rd is the looserate
                         wins = leagueEntries[0]["wins"]
                         losses = leagueEntries[0]["losses"]
                         winrate =  wins/ (wins + losses) 
                         looserate = losses / (wins + losses)
                         print(f"wins: {wins} losses: {losses} winrate: {winrate} looserate: {looserate}")
+
+                        # creates the material of the cylinder. 2nd parameter is the winrate, 3rd is the looserate
                         mat = createMaterialPieChart(self, winrate, looserate)
 
                         if ob.data.materials:
@@ -337,7 +344,127 @@ class APIAddon(bpy.types.Operator):
                             ob.data.materials.append(mat)
                         
                     else:
-                        self.report({'ERROR'}, 'It seems there are Data for your ranked games. You need to be placed in a rank for this to work.')      
+                        self.report({'ERROR'}, 'It seems there are Data for your ranked games. You need to be placed in a rank for this to work.')   
+
+
+                ########################## Rank Display ####################################
+                elif self.type_of_chart == "RankDisplay":
+                    if respEntries.text != "[]":
+                        print("Rank Display")
+
+                        ### Get Data ###
+
+                        rank = leagueEntries[0]["rank"]
+                        tier = leagueEntries[0]["tier"]
+
+                        bpy.ops.mesh.primitive_plane_add(size=30, enter_editmode=False, align='WORLD', location=(0, 0, 30), rotation=(1.5708, 0, 0), scale=(1, 1, 1))
+
+                        ob = bpy.context.active_object
+
+                        mat = bpy.data.materials.new(name="Rank_Mat")
+                        mat.use_nodes = True
+                        bsdf = mat.node_tree.nodes["Principled BSDF"]
+                        texImage = mat.node_tree.nodes.new('ShaderNodeTexImage')
+
+                        ############ Grade noch große Baustelle beim laden der Bilder ######################
+
+                        #bpy.ops.image.open(filepath="C:\\Users\\Anwender\\OneDrive\\Documents\\Studium\\5. Semester\\Veranstalltung Datenverarbeitung in der Medienproduktion\\DaVerMePro-2021\\Pictures\\tft_regalia_gold.png", directory="C:\\Users\\Anwender\\OneDrive\\Documents\\Studium\\5. Semester\\Veranstalltung Datenverarbeitung in der Medienproduktion\\DaVerMePro-2021\\Pictures\\", files=[{"name":"tft_regalia_gold.png", "name":"tft_regalia_gold.png"}], show_multiview=False)
+                        
+                        #filepath=f"tft_regalia_{tier}.png"
+
+                        #texImage.image = bpy.data.images.load(filepath, check_existing=False)
+                        # Load a new image into the main database
+
+
+                        #texImage.image = bpy.data.images.load(filepath=f"..\\Pictures\\tft_regalia_{tier}.png", relative_path = True)
+                        texImage.image = bpy.data.images.load(filepath=f"C:\\Users\\Anwender\\OneDrive\\Documents\\Studium\\5. Semester\\Veranstalltung Datenverarbeitung in der Medienproduktion\\DaVerMePro-2021\\Pictures\\tft_regalia_{tier}.png")
+                        #texImage.image = bpy.data.images.load("C:\\Users\\Anwender\\OneDrive\\Documents\\Studium\\5. Semester\\Veranstalltung Datenverarbeitung in der Medienproduktion\\DaVerMePro-2021\\Pictures\\tft_regalia_bronze.png")
+
+                        ###################################################
+
+
+                        mat.node_tree.links.new(bsdf.inputs['Base Color'], texImage.outputs['Color'])
+
+                        if ob.data.materials:
+                            ob.data.materials[0] = mat
+                        else:
+                            ob.data.materials.append(mat)
+
+                        fontMat = bpy.data.materials.get("FontMaterial")
+                        if fontMat is None:
+                            # create material
+                            fontMat = bpy.data.materials.new(name="FontMaterial")
+
+                        fontMat.diffuse_color = (
+                            self.name_color.r, self.name_color.g, self.name_color.b, 1)
+                        fontMat = bpy.data.materials['FontMaterial']
+
+
+                        ### Display Name ###
+
+                        bpy.data.curves.new(
+                            type="FONT", name=f"Font Curve Name").body = self.summoner_Name
+                        font_obj = bpy.data.objects.new(  name=f"Font Curve Name", object_data=bpy.data.curves[f"Font Curve Name"])
+                        bpy.context.scene.collection.objects.link(font_obj)
+
+                    
+                        font_obj.rotation_euler[0] = 1.5708
+
+                        font_obj.scale = (5,5,5)
+                        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+                        font_obj.location = (-font_obj.dimensions.x/2, 0, 0)
+
+                        bpy.data.curves[f"Font Curve Name"].materials.append(fontMat)
+                        bpy.data.curves[f"Font Curve Name"].extrude = 0.1
+                        font_obj.name = self.summoner_Name + "-Font"
+
+                    
+
+                        ### Display Tier ###
+
+
+                        bpy.data.curves.new(
+                            type="FONT", name=f"Font Curve Tier").body = tier
+                        font_objTier = bpy.data.objects.new(  name=f"Font Curve Tier", object_data=bpy.data.curves[f"Font Curve Tier"])
+                        bpy.context.scene.collection.objects.link(font_objTier)
+
+                    
+                        font_objTier.rotation_euler[0] = 1.5708
+
+                        font_objTier.scale = (5,5,5)
+                        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+                        font_objTier.location = (-font_objTier.dimensions.x/2, 0, 10)
+
+                        bpy.data.curves[f"Font Curve Tier"].materials.append(fontMat)
+                        bpy.data.curves[f"Font Curve Tier"].extrude = 0.1
+                        font_objTier.name = tier + "-Font"
+
+                        
+                        
+                        ### Display Rank ###
+
+                        bpy.data.curves.new(
+                            type="FONT", name=f"Font Curve Rank").body = rank
+                        font_objRank = bpy.data.objects.new(  name=f"Font Curve Rank", object_data=bpy.data.curves[f"Font Curve Rank"])
+                        bpy.context.scene.collection.objects.link(font_objRank)
+
+                    
+                        font_objRank.rotation_euler[0] = 1.5708
+
+                        font_objRank.scale = (4,4,4)
+                        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+                        font_objRank.location = (-font_objRank.dimensions.x, 0, 5)
+
+                        bpy.data.curves[f"Font Curve Rank"].materials.append(fontMat)
+                        bpy.data.curves[f"Font Curve Rank"].extrude = 0.1
+                        font_objRank.name = rank + "-Font"
+
+                    else:
+                        self.report({'ERROR'}, 'It seems there are Data for your ranked games. You need to be placed in a rank for this to work.')   
+
+
+
+
 
         return {"FINISHED"}
     
@@ -436,8 +563,13 @@ def createMaterialPieChart(self, winrate, looserate):
     return material_PieChart
 
 
-def createCube(self, i, currentChamp, numberOfChamps, mat):
-    scaleFac = currentChamp.points / 10000 * 3
+def createCube(self, i, currentChamp, numberOfChamps, mat, masteryPointsMax, maxHeight):
+    # maxHeight => 10 
+    # currentChamp.points =>    
+    
+    scaleFac = maxHeight / masteryPointsMax * currentChamp.points
+
+    #scaleFac = currentChamp.points / 10000 * 3
     bpy.ops.mesh.primitive_cube_add(
         size=1, location=(-((numberOfChamps)/2 * 5) + (i + 0.5)*5, 0, scaleFac/2), scale=(1, 1, scaleFac))
     bpy.context.object.color = (
@@ -457,9 +589,23 @@ def createCube(self, i, currentChamp, numberOfChamps, mat):
         # no slots
         ob.data.materials.append(mat)
 
+def addScale( self, masteryPointsMax, maxHeight, numberOfChamps, mat):
+    bpy.data.curves.new(
+        type="FONT", name=f"Scale Font").body = f"{masteryPointsMax}"
+    font_obj = bpy.data.objects.new(
+        name=f"Scale Font", object_data=bpy.data.curves[f"Scale Font"])
+    bpy.context.scene.collection.objects.link(font_obj)
 
-def createNameBars(self, i, currentChamp, numberOfChamps, mat):
-    scaleFac = currentChamp.points / 10000 * 3
+    font_obj.location = (- ((numberOfChamps)/2 * 5) - font_obj.dimensions.x ,0, maxHeight)
+    font_obj.rotation_euler[0] = 1.5708
+
+    bpy.data.curves[f"Scale Font"].materials.append(mat)
+    bpy.data.curves[f"Scale Font"].extrude = 0.1
+    font_obj.name = "Scale-Font"
+
+
+def createNameBars(self, i, currentChamp, numberOfChamps, mat, masteryPointsMax, maxHeight):
+    scaleFac = maxHeight / masteryPointsMax * currentChamp.points
 
     bpy.data.curves.new(
         type="FONT", name=f"Font Bars{i}").body = currentChamp.name
@@ -511,13 +657,15 @@ def getCurrentChamp(self, championInfo, champions, i):
 
 
 # creates the tower of small cubes with names in front
-def createCubeTower(self, currentchamp, numberOfChamps, x, mat):
+def createCubeTower(self, currentChamp, numberOfChamps, x, mat, masteryPointsMax, maxHeight):
+
+    height = maxHeight / masteryPointsMax * currentChamp.points
     total_height = 0
     rand_offset = 0.4
 
-    for z in range(int(currentchamp.points/1000)):
+    for z in range(int(height)):
         # c_cube_size = random.uniform( self.cube_size_min, self.cube_size_max)
-        c_cube_size = 1.5
+        c_cube_size = 1
         bpy.ops.mesh.primitive_cube_add(
             location=(-((numberOfChamps)/2 * 5) + (x+0.5)*5, 0, total_height + c_cube_size/2), size=(c_cube_size))
         total_height += c_cube_size
