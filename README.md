@@ -21,6 +21,12 @@ Zeigt die Winrate des Summoners an.
 #### Pie-Chart
 <img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Pie-chart1.png">
 
+### Rank Display
+Zeigt den aktuellen Rank des Spielers an. 
+
+#### Pie-Chart
+<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Display-Rank.png">
+
 
 <!-- Di 7.12 Zwischenpräsentationen
 
