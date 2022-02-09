@@ -485,36 +485,46 @@ class APIAddon(bpy.types.Operator):
     
     def draw(self, context):
         self.layout.use_property_split = True
+        #self.layout.scale_x = -1
 
-        row1 = self.layout.row()
+        box = self.layout.box()
+        box.label(text="Account Info and Riot-Token")
+
+        #box.grid_flow(False,0,True,False,True)
+        row1 = box.row()
+
+        #row1 = self.layout.row()
         row1.prop(self, "summoner_Name")
 
-        row2 = self.layout.row()
+        row2 = box.row()
         row2.prop(self, "summoner_TagLine")
 
-        row3 = self.layout.row()
+        row3 = box.row()
         row3.prop(self, "riot_Token")
 
-        row4 = self.layout.row()
+        box2 = self.layout.box()
+        box2.label(text="Options")
+
+        row4 = box2.row()
         row4.prop(self, "type_of_chart")
 
         
 
 
         if self.type_of_chart == "BarChart":
-            row5 = self.layout.row()
+            row5 = box2.row()
             row5.prop(self, "type_of_Chart_Variant")
 
-            row6 = self.layout.row()
+            row6 = box2.row()
             row6.prop(self, "number_of_Champs")
             
-            row7 = self.layout.row()
+            row7 = box2.row()
             row7.prop(self, "cube_color")
 
-            row8 = self.layout.row()
+            row8 = box2.row()
             row8.prop(self, "name_color")
 
-            row9 = self.layout.row()
+            row9 = box2.row()
             row9.prop(self, "plane_color")  
 
             """ row5.enabled = True 
@@ -529,7 +539,7 @@ class APIAddon(bpy.types.Operator):
             row8.enabled = False
             row9.enabled = False """
         elif self.type_of_chart == "RankDisplay":
-            row8 = self.layout.row()
+            row8 = box2.row()
             row8.prop(self, "name_color")
 
 
