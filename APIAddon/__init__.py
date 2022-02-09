@@ -468,14 +468,14 @@ class APIAddon(bpy.types.Operator):
 
                             font_objRank.scale = (4,4,4)
                             bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-                            font_objRank.location = (-font_objRank.dimensions.x, 0, 5)
+                            font_objRank.location = (-font_objRank.dimensions.x/2, 0, 5)
 
                             bpy.data.curves[f"Font Curve Rank"].materials.append(fontMat)
                             bpy.data.curves[f"Font Curve Rank"].extrude = 0.1
                             font_objRank.name = rank + "-Font"
 
                         else:
-                            self.report({'ERROR'}, 'It seems there are Data for your ranked games. You need to be placed in a rank for this to work.')   
+                            self.report({'ERROR'}, 'It seems there is no Data for your ranked games. You need to be placed in a rank for this to work.')   
 
 
 
