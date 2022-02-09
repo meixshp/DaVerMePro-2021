@@ -15,6 +15,8 @@ import bpy
 import requests
 import json
 import random
+import os
+import tempfile
 # import enum
 
 bl_info = {
@@ -101,7 +103,7 @@ class APIAddon(bpy.types.Operator):
     riot_Token: bpy.props.StringProperty(
         name="X-Riot-Token",
         description="You need to generate a X-Riot-Token and put it here to get acces to the data.",
-        default="RGAPI-2879b46d-cf86-42a6-99bd-40c581c908eb"
+        default="RGAPI-f8f55177-7639-4f7a-b603-604341c5edff"
     )
 
     type_of_chart: bpy.props.EnumProperty(
@@ -146,7 +148,7 @@ class APIAddon(bpy.types.Operator):
     plane_color: bpy.props.FloatVectorProperty(
         name="Color of the floor",
         description="Choose which color the floor has.",
-        default=(0.1, 0.1, 0.1),
+        default=(0.0, 0.0, 0.0),
         subtype="COLOR")
 
     scaleFac1: float = 0
@@ -366,6 +368,7 @@ class APIAddon(bpy.types.Operator):
                     elif self.type_of_chart == "RankDisplay":
                         if respEntries.text != "[]":
                             print("Rank Display")
+                            bpy.context.space_data.shading.type = 'MATERIAL'
 
                             ### Get Data ###
 
@@ -381,19 +384,34 @@ class APIAddon(bpy.types.Operator):
                             bsdf = mat.node_tree.nodes["Principled BSDF"]
                             texImage = mat.node_tree.nodes.new('ShaderNodeTexImage')
 
-                            ############ Grade noch große Baustelle beim laden der Bilder ######################
+                            ############ Laden des Rank-Bild ######################
 
-                            #bpy.ops.image.open(filepath="C:\\Users\\Anwender\\OneDrive\\Documents\\Studium\\5. Semester\\Veranstalltung Datenverarbeitung in der Medienproduktion\\DaVerMePro-2021\\Pictures\\tft_regalia_gold.png", directory="C:\\Users\\Anwender\\OneDrive\\Documents\\Studium\\5. Semester\\Veranstalltung Datenverarbeitung in der Medienproduktion\\DaVerMePro-2021\\Pictures\\", files=[{"name":"tft_regalia_gold.png", "name":"tft_regalia_gold.png"}], show_multiview=False)
+                            # create temporary folder
+                            temp_dir = tempfile.TemporaryDirectory()
                             
-                            #filepath=f"tft_regalia_{tier}.png"
+                            try:
+                                #fetch the image 
+                                url_rank_symbol = f"https://raw.communitydragon.org/12.3/game/assets/ux/tftmobile/particles/tft_regalia_{tier.lower()}.png"               
+                                headers = {'Content-type': 'image/png'}                                                 
+                                r = requests.get(url_rank_symbol, stream=True, headers=headers)
 
-                            #texImage.image = bpy.data.images.load(filepath, check_existing=False)
-                            # Load a new image into the main database
+                                # write the fetched image on the file
+                                with open(f"{temp_dir.name}\\rank_image.png", 'wb') as f:
+                                    f.write(r.content)
 
+                                #create a blender datablock of it
+                                img = bpy.data.images.load(f"{temp_dir.name}\\rank_image.png")
 
-                            #texImage.image = bpy.data.images.load(filepath=f"..\\Pictures\\tft_regalia_{tier}.png", relative_path = True)
-                            texImage.image = bpy.data.images.load(filepath=f"C:\\Users\\Anwender\\OneDrive\\Documents\\Studium\\5. Semester\\Veranstalltung Datenverarbeitung in der Medienproduktion\\DaVerMePro-2021\\Pictures\\tft_regalia_{tier}.png")
-                            #texImage.image = bpy.data.images.load("C:\\Users\\Anwender\\OneDrive\\Documents\\Studium\\5. Semester\\Veranstalltung Datenverarbeitung in der Medienproduktion\\DaVerMePro-2021\\Pictures\\tft_regalia_bronze.png")
+                                #pack the image in the blender file so...
+                                img.pack()
+
+                                #...we can delete the temp image
+                                os.remove(f"{temp_dir.name}\\rank_image.png")
+                            except Exception as e:
+                                raise NameError("Cannot load image: {0}".format(e))
+
+                            texImage.image = img
+                                          
 
                             ###################################################
 
@@ -477,7 +495,8 @@ class APIAddon(bpy.types.Operator):
                         else:
                             self.report({'ERROR'}, 'It seems there is no Data for your ranked games. You need to be placed in a rank for this to work.')   
 
-
+                    else:
+                        self.report({'ERROR'}, 'weird')
 
 
 
