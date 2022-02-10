@@ -11,6 +11,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+
+from enum import Enum
 import bpy
 import requests
 import json
@@ -31,6 +33,11 @@ bl_info = {
 }
 
 global scaleFac
+
+class Status(Enum):
+    IDLE = 1
+    EXECUTE = 2
+    CLEAR = 3
 
 class accountData(object):
     def __init__(self, puuid, gameName, tagLine):
@@ -69,9 +76,28 @@ class champ(object):
         self.name = name
         self.points = points
 
+class clearTest(bpy.types.Operator):
+    bl_idname = "button.clear"
+    bl_label ="clear"
+
+    def execute(self, context):
+        APIAddon.action = Status.CLEAR
+        print("CLEAR")
+        
+        return {'FINISHED'}
+
+class executeTest(bpy.types.Operator):
+    bl_idname = "button.execute"
+    bl_label ="execute"
+
+    def execute(self, context):
+        APIAddon.action = Status.EXECUTE
+        print("EXECUTE")
+        
+        return {'FINISHED'}
 
 class APIAddon(bpy.types.Operator):
-
+    
     bl_idname = "mesh.apivisual"
     bl_label = "LOL-API Visualizer"
     bl_description = "Generates meshes to visualise LOL-statistics"
@@ -88,22 +114,28 @@ class APIAddon(bpy.types.Operator):
     }
     bl_options = {"REGISTER", "UNDO"}
 
+    def update(self, context):
+        APIAddon.action = Status.IDLE
+        
     summoner_Name: bpy.props.StringProperty(
         name="Name of the Summoner",
         description="Put your name which you are called in LOL here.",
-        default="HIDE ON SHROUD"
+        default="HIDE ON SHROUD",
+        update=update
     )
 
     summoner_TagLine: bpy.props.StringProperty(
         name="Tagline of the Summoner",
         description="Put your tagline here, content following the hashtag (#).",
-        default="EUW"
+        default="EUW",
+        update=update
     )
 
     riot_Token: bpy.props.StringProperty(
         name="X-Riot-Token",
         description="You need to generate a X-Riot-Token and put it here to get acces to the data.",
-        default="RGAPI-39370052-2d53-483b-a110-df931b06008f"
+        default="RGAPI-39370052-2d53-483b-a110-df931b06008f",
+        update=update
     )
 
     type_of_chart: bpy.props.EnumProperty(
@@ -114,7 +146,8 @@ class APIAddon(bpy.types.Operator):
 
         name="Type of chart",
         description="Which type of chart do your want? Bar chart, Cake chart, ...",
-        default="BarChart"
+        default="BarChart",
+        update=update
     )
 
     type_of_Chart_Variant: bpy.props.EnumProperty(
@@ -126,59 +159,87 @@ class APIAddon(bpy.types.Operator):
         name="Type of Bar chart",
         description="Which type of Bar chart do your want?",
         default=1,
+        update=update
     )
 
     number_of_Champs: bpy.props.IntProperty(
         name="Number of Champions",
         description="How many Champions should be displayed? From top to bottom.",
-        default=6)
+        default=6,
+        update=update
+    )
 
     cube_color: bpy.props.FloatVectorProperty(
         name="Color of the bars",
         description="Choose which color the bars have.",
-        default=(0.096, 0.614, 1),
-        subtype="COLOR")
+        default=(0.096, 1, 0.1),
+        subtype="COLOR",
+        update=update
+    )
 
     name_color: bpy.props.FloatVectorProperty(
         name="Color of the names",
         description="Choose which color the names have.",
-        default=(0.7, 0.5, 1.0),
-        subtype="COLOR")
+        default=(1, 0.09, 0.09),
+        subtype="COLOR",
+        update=update
+    )
 
     plane_color: bpy.props.FloatVectorProperty(
         name="Color of the floor",
         description="Choose which color the floor has.",
         default=(0.0, 0.0, 0.0),
-        subtype="COLOR")
-
-    action: bpy.props.EnumProperty(
-        items={
-            ('CLEAR', 'Clear scene', 'Clear scene'),
-            ('EXECUTE', 'Visualize Input', 'Visualize Input'),
-            ('IDLE', '', '')             
-        },
-        default="IDLE"
-        
+        subtype="COLOR",
+        update=update
     )
+
+    winrate_color: bpy.props.FloatVectorProperty(
+        name="Color Winn",
+        description="Choose which color win has.",
+        default=(0, 1, 0),
+        subtype="COLOR",
+        update=update
+    )
+
+    lossrate_color: bpy.props.FloatVectorProperty(
+        name="Color Loss",
+        description="Choose which color loss has.",
+        default=(1, 0, 0),
+        subtype="COLOR",
+        update=update
+    )
+
+    action = Status(Status.IDLE)            
 
     @classmethod
     def poll(cls, context):
         return True
 
     def execute(self, context):
+        
         print(f"self.action start: {self.action}")
-        if self.action == "CLEAR":
+        if self.action == Status.CLEAR:
             print("CLEAR-Modi")
             #self.clear_Scene()
             bpy.ops.object.select_all(action='SELECT')  # selektiert alle Objekte
             # löscht selektierte objekte
             bpy.ops.object.delete(use_global=False, confirm=False)
             bpy.ops.outliner.orphans_purge()  # löscht überbleibende Meshdaten etc.
-            self.action = "IDLE"
-        elif self.action == "IDLE":
+            #self.action = Status.IDLE
+        elif self.action == Status.IDLE:
             print("IDLE-Modi")
-        elif self.action == "EXECUTE":
-            
+            bpy.ops.object.select_all(action='SELECT')  # selektiert alle Objekte
+            # löscht selektierte objekte
+            bpy.ops.object.delete(use_global=False, confirm=False)
+            bpy.ops.outliner.orphans_purge()  # löscht überbleibende Meshdaten etc.
+            return {'FINISHED'}
+        elif self.action == Status.EXECUTE:
+            # +++++++++++
+            bpy.ops.object.select_all(action='SELECT')  # selektiert alle Objekte
+            # löscht selektierte objekte
+            bpy.ops.object.delete(use_global=False, confirm=False)
+            bpy.ops.outliner.orphans_purge()  # löscht überbleibende Meshdaten etc.
+            # ++++++++++
             summonerName = f"{self.summoner_Name}"
             summerTagline = f"{self.summoner_TagLine}"
             # requestString = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}"
@@ -349,20 +410,27 @@ class APIAddon(bpy.types.Operator):
                         elif self.type_of_chart == "PieChart":
                             if respEntries.text != "[]":
                                 print("Pie-Chart")
+
+                                ## Get the Data ##
+                                wins = leagueEntries[0]["wins"]
+                                losses = leagueEntries[0]["losses"]
+                                
+                                winrate =  wins/ (wins + losses) 
+                                lossrate = losses / (wins + losses)
+
+
                                 bpy.context.space_data.shading.type = 'MATERIAL'
 
                                 print("var1")
                                 bpy.ops.mesh.primitive_cylinder_add(
                                     vertices=101, radius=4, depth=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
                                 ob = bpy.context.active_object
-                                wins = leagueEntries[0]["wins"]
-                                losses = leagueEntries[0]["losses"]
-                                winrate =  wins/ (wins + losses) 
-                                looserate = losses / (wins + losses)
-                                print(f"wins: {wins} losses: {losses} winrate: {winrate} looserate: {looserate}")
+                                ob.rotation_euler[2] = 1.6
+
+                                print(f"wins: {wins} losses: {losses} winrate: {winrate} looserate: {lossrate}")
 
                                 # creates the material of the cylinder. 2nd parameter is the winrate, 3rd is the looserate
-                                mat = createMaterialPieChart(self, winrate, looserate)
+                                mat = createMaterialPieChart(self, winrate, lossrate, self.winrate_color, self.lossrate_color)
 
                                 if ob.data.materials:
                                     # assign to 1st material slot
@@ -370,6 +438,67 @@ class APIAddon(bpy.types.Operator):
                                 else:
                                     # no slots
                                     ob.data.materials.append(mat)
+
+                                # creates the material for the Fonts
+                                fontMatWin = bpy.data.materials.get("FontMaterialWin")
+                                if fontMatWin is None:
+                                    # create material
+                                    fontMatWin = bpy.data.materials.new(name="FontMaterialWin")
+
+                                fontMatWin.diffuse_color = (
+                                    self.winrate_color.r, self.winrate_color.g, self.winrate_color.b, 1)
+                                fontMatWin = bpy.data.materials['FontMaterialWin']
+
+                                fontMatLoss = bpy.data.materials.get("FontMaterialLoss")
+                                if fontMatLoss is None:
+                                    # create material
+                                    fontMatLoss = bpy.data.materials.new(name="FontMaterialLoss")
+
+                                fontMatLoss.diffuse_color = (
+                                    self.lossrate_color.r, self.lossrate_color.g, self.lossrate_color.b, 1)
+                                fontMatLoss = bpy.data.materials['FontMaterialLoss']
+
+                                winrate *= 100
+                                lossrate *= 100
+                                ### Display Winrate ###
+
+
+                                bpy.data.curves.new(
+                                    type="FONT", name=f"Font Curve Winrate").body = f"Win rate: {round(winrate,2)}%"
+                                font_objTier = bpy.data.objects.new(  name=f"Font Curve Winrate", object_data=bpy.data.curves[f"Font Curve Winrate"])
+                                bpy.context.scene.collection.objects.link(font_objTier)
+
+                            
+                                font_objTier.rotation_euler[0] = 1.5708
+
+                                font_objTier.scale = (3,3,3)
+                                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+                                font_objTier.location = (-font_objTier.dimensions.x/2, 0, 10)
+
+                                bpy.data.curves[f"Font Curve Winrate"].materials.append(fontMatWin)
+                                bpy.data.curves[f"Font Curve Winrate"].extrude = 0.1
+                                font_objTier.name =f"{winrate}-Font"
+
+                                
+                                
+                                ### Display Loosrate ###
+
+                                bpy.data.curves.new(
+                                    type="FONT", name=f"Font Curve Looserate").body = f"Loss rate: {round(lossrate,2)}%"
+                                font_objRank = bpy.data.objects.new(  name=f"Font Curve Looserate", object_data=bpy.data.curves[f"Font Curve Looserate"])
+                                bpy.context.scene.collection.objects.link(font_objRank)
+
+                            
+                                font_objRank.rotation_euler[0] = 1.5708
+
+                                font_objRank.scale = (3,3,3)
+                                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+                                font_objRank.location = (-font_objRank.dimensions.x/2, 0, 5)
+
+                                bpy.data.curves[f"Font Curve Looserate"].materials.append(fontMatLoss)
+                                bpy.data.curves[f"Font Curve Looserate"].extrude = 0.1
+                                font_objRank.name = f"{lossrate}-Font"
+
                                 
                             else:
                                 self.report({'ERROR'}, 'It seems there are Data for your ranked games. You need to be placed in a rank for this to work.')   
@@ -513,7 +642,7 @@ class APIAddon(bpy.types.Operator):
 
                         else:
                             self.report({'ERROR'}, 'weird')
-            self.action = "IDLE"
+            #self.action = Status.IDLE
 
 
         return {"FINISHED"}
@@ -548,7 +677,8 @@ class APIAddon(bpy.types.Operator):
         row4.prop(self, "type_of_chart")
 
         
-
+        self.layout.operator('button.clear', text='Clear scene')
+        self.layout.operator('button.execute', text='Execute')
 
         if self.type_of_chart == "BarChart":
             row5 = box2.row()
@@ -566,23 +696,20 @@ class APIAddon(bpy.types.Operator):
             row9 = box2.row()
             row9.prop(self, "plane_color")  
 
-            """ row5.enabled = True 
-            row6.enabled = True
-            row7.enabled = True
-            row8.enabled = True
-            row9.enabled = True """
         elif self.type_of_chart == "PieChart":
-            """ row5.enabled = False
-            row6.enabled = False
-            row7.enabled = False
-            row8.enabled = False
-            row9.enabled = False """
+
+            row13 = box2.row()
+            row13.prop(self, "winrate_color")
+
+            row14 = box2.row()
+            row14.prop(self, "lossrate_color")
+           
         elif self.type_of_chart == "RankDisplay":
             row8 = box2.row()
             row8.prop(self, "name_color")
 
 
-def createMaterialPieChart(self, winrate, looserate):
+def createMaterialPieChart(self, winrate, looserate, winrate_color, lossrate_color):
     material_PieChart = bpy.data.materials.new(name="Material_PieChart")
     material_PieChart.use_nodes = True
 
@@ -611,8 +738,8 @@ def createMaterialPieChart(self, winrate, looserate):
     colorRamp.color_ramp.elements.new(1 - winrate-looserate)
 
     # Setting the color for the stop that we recently created
-    colorRamp.color_ramp.elements[0].color = (0, 1, 0, 1)
-    colorRamp.color_ramp.elements[1].color = (1, 0, 0, 1)
+    colorRamp.color_ramp.elements[0].color = (winrate_color.r,winrate_color.g,winrate_color.b,1)
+    colorRamp.color_ramp.elements[1].color = (lossrate_color.r,lossrate_color.g,lossrate_color.b,1)
     colorRamp.color_ramp.elements[2].color = (0.6, 0.6, 0.6, 1)
 
     link = material_PieChart.node_tree.links.new
@@ -659,7 +786,8 @@ def createCube(self, i, currentChamp, numberOfChamps, mat, masteryPointsMax, max
 def addScale( self, masteryPointsMax, maxHeight, numberOfChamps, mat):
     scaleString = f"{masteryPointsMax}"
     for x in range(numberOfChamps):
-        scaleString += "__________" 
+        scaleString += "__________"
+    scaleString += "Masterypoints" 
     bpy.data.curves.new(
         type="FONT", name=f"Scale Font").body = scaleString
     font_obj = bpy.data.objects.new(
@@ -769,12 +897,16 @@ def menu_func(self, context):
 
 def register():
     bpy.types.VIEW3D_MT_mesh_add.append(menu_func)
+    bpy.utils.register_class(clearTest)
+    bpy.utils.register_class(executeTest)
     bpy.utils.register_class(APIAddon)
 
 
 def unregister():
     bpy.types.VIEW3D_MT_mesh_add.remove(menu_func)
     bpy.utils.unregister_class(APIAddon)
+    bpy.utils.unregister_class(clearTest)
+    bpy.utils.unregister_class(executeTest)
 
 
 if __name__ == "__main__":
