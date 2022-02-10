@@ -25,7 +25,7 @@ Zeigt die Winrate des Summoners an.
 Zeigt den aktuellen Rank des Spielers an. 
 
 #### Rank Display
-<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Display-Ranking.png">
+<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Display-Rank.png">
 
 
 <!-- Di 7.12 Zwischenpräsentationen
