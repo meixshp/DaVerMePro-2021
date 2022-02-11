@@ -1,40 +1,36 @@
 # DaVerMePro-2021
 
 ## APIAddon
-Ein Blender-Addon um Daten der League of Legends API zu visualisieren 
+Ein Blender-Addon um Daten der League of Legends API zu visualisieren.
+A Blender-Addon which displays data of the League of Legends API. 
 
 ### Bar-Chart
-Zeigt die Masterypoints der Champions an. 
+Zeigt die Masterypoints der gespielten Champions an. 
+Shows the Masterypoints of the played Champions
 
-#### Bar-Chart nr. 1
-<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/CubeBarchart.png">
+#### Bar-Chart nr. 1:
+<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/BarChart1.png">
 
-#### Bar-Chart nr. 2
-<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/NameBarchart.png">
+#### Bar-Chart nr. 2:
+<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/BarChart2.png">
 
-#### Bar-Chart nr. 3
-<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/CubetowerBarchart.png">
+#### Bar-Chart nr. 3:
+<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/BarChart3.png">
 
 ### Pie-Chart
-Zeigt die Winrate des Summoners an. 
+Zeigt die Winrate des Spielers in seinen kompetitiven Spielen an. 
+Shows the win rate of the Player in his ranked games
 
-#### Pie-Chart
-<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Pie-chart1.png">
+#### Beispiel:
+<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Pie-chart.png">
 
 ### Rank Display
-Zeigt den aktuellen Rank des Spielers an. 
+Zeigt den aktuellen Rang des Spielers an. 
+Shows the current rank of the player. 
 
-#### Rank Display
+#### Beispiel 1:
 <img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Display-Rank.png">
 
+#### Beispiel 2:
+<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Display-Rank1.png">
 
-<!-- Di 7.12 Zwischenpräsentationen
-
-10-20 min
-
-1. Stand
-2. Was wollt ihr erreichen
-3. Nice to have Features
-4. Was für Addons/Technologien gibt es bereits
-    - was hebt euer Addon (nicht) davon ab
-5. Schwierigkeiten bei der Entwicklung/Konzeption -->

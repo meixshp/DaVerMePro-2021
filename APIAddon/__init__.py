@@ -349,9 +349,10 @@ class APIAddon(bpy.types.Operator):
                                 self.plane_color.r, self.plane_color.g, self.plane_color.b, 1)
 
                             i = 0
-                            masteryPointsMax = getCurrentChamp(self, championInfo, champions, 0).points
+                            
                             # for y in range(2):
-                            try: 
+                            try:
+                                masteryPointsMax = getCurrentChamp(self, championInfo, champions, 0).points
                                 for x in range(self.number_of_Champs):
                                     # for champ in champs:
 
@@ -481,7 +482,7 @@ class APIAddon(bpy.types.Operator):
 
                                 
                                 
-                                ### Display Loosrate ###
+                                ### Display Lossrate ###
 
                                 bpy.data.curves.new(
                                     type="FONT", name=f"Font Curve Looserate").body = f"Loss rate: {round(lossrate,2)}%"
