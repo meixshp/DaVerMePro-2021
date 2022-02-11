@@ -9,13 +9,13 @@ Zeigt die Masterypoints der gespielten Champions an.
 Shows the Masterypoints of the played Champions
 
 #### Bar-Chart nr. 1:
-<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/BarChart1.png">
+<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Bar-Chart1.png">
 
 #### Bar-Chart nr. 2:
-<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/BarChart2.png">
+<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Bar-Chart2.png">
 
 #### Bar-Chart nr. 3:
-<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/BarChart3.png">
+<img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/Bar-Chart3.png">
 
 ### Pie-Chart
 Zeigt die Winrate des Spielers in seinen kompetitiven Spielen an. 
