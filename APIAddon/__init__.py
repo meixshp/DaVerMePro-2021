@@ -134,7 +134,7 @@ class APIAddon(bpy.types.Operator):
     riot_Token: bpy.props.StringProperty(
         name="X-Riot-Token",
         description="You need to generate a X-Riot-Token and put it here to get acces to the data.",
-        default="RGAPI-39370052-2d53-483b-a110-df931b06008f",
+        default="RGAPI-f26ea3a1-9b77-40d9-9348-ace7105de0e5",
         update=update
     )
 
@@ -158,7 +158,7 @@ class APIAddon(bpy.types.Operator):
 
         name="Type of Bar chart",
         description="Which type of Bar chart do your want?",
-        default=1,
+        default="CubeBars",
         update=update
     )
 
@@ -766,10 +766,21 @@ def createCube(self, i, currentChamp, numberOfChamps, mat, masteryPointsMax, max
 
     #scaleFac = currentChamp.points / 10000 * 3
     bpy.ops.mesh.primitive_cube_add(
-        size=1, location=(-((numberOfChamps)/2 * 5) + (i + 0.5)*5, 0, scaleFac/2), scale=(1, 1, scaleFac))
+        size=1, location=(-((numberOfChamps)/2 * 5) + (i + 0.5)*5, 0, scaleFac/2))
     bpy.context.object.color = (
         self.cube_color.r, self.cube_color.g, self.cube_color.b, 1)
     ob = bpy.context.active_object
+
+    ob.location = (-((numberOfChamps)/2 * 5) + (i + 0.5)*5,0,0)
+    ob.scale = (1,1,0)
+    ob.keyframe_insert(data_path="location",frame= 0)
+    ob.keyframe_insert(data_path="scale",frame= 0)
+
+    ob.location = (-((numberOfChamps)/2 * 5) + (i + 0.5)*5,0,scaleFac/2)
+    ob.scale = (1,1,scaleFac)
+
+    ob.keyframe_insert(data_path="location",frame= 100)
+    ob.keyframe_insert(data_path="scale",frame= 100)
 
     ob.name = currentChamp.name + "-Bar"
     # bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
@@ -813,8 +824,15 @@ def createNameBars(self, i, currentChamp, numberOfChamps, mat, masteryPointsMax,
     bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
     bpy.context.scene.collection.objects.link(font_obj)
 
-    font_obj.location = (-((numberOfChamps)/2 * 5) + (i+0.5)
-                         * 5 + font_obj.dimensions.x/4, 0, 0)
+    font_obj.location = (-((numberOfChamps)/2 * 5) + (i+0.5) * 5 + font_obj.dimensions.x/4, 0, 0)
+
+    font_obj.scale = (0, 2, 1)
+    font_obj.keyframe_insert(data_path="scale",frame= 0)
+
+    
+    font_obj.scale = (scaleFac/2, 2, 1)    
+    font_obj.keyframe_insert(data_path="scale",frame= 100)
+
     # bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
     font_obj.dimensions = (scaleFac, 2, 1)
     bpy.data.objects[f"Font BarsObj{i}"].rotation_euler[0] = 1.5708
