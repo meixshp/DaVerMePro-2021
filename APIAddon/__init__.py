@@ -39,6 +39,7 @@ class Status(Enum):
     EXECUTE = 2
     CLEAR = 3
 
+# classes to get the data of the json objects in an easiery way
 class accountData(object):
     def __init__(self, puuid, gameName, tagLine):
         self.puuid = puuid
@@ -75,6 +76,8 @@ class champ(object):
         self.id = id
         self.name = name
         self.points = points
+
+# other operators for the buttons
 
 class clearTest(bpy.types.Operator):
     bl_idname = "button.clear"
@@ -116,7 +119,8 @@ class APIAddon(bpy.types.Operator):
 
     def update(self, context):
         APIAddon.action = Status.IDLE
-        
+
+    # Properties of the addon 
     summoner_Name: bpy.props.StringProperty(
         name="Name of the Summoner",
         description="Put your name which you are called in LOL here.",
@@ -217,42 +221,41 @@ class APIAddon(bpy.types.Operator):
 
     def execute(self, context):
         
+        #if to decide what to do
         print(f"self.action start: {self.action}")
         if self.action == Status.CLEAR:
             print("CLEAR-Modi")
             #self.clear_Scene()
             bpy.ops.object.select_all(action='SELECT')  # selektiert alle Objekte
-            # löscht selektierte objekte
-            bpy.ops.object.delete(use_global=False, confirm=False)
+            bpy.ops.object.delete(use_global=False, confirm=False) # löscht selektierte objekte
             bpy.ops.outliner.orphans_purge()  # löscht überbleibende Meshdaten etc.
-            #self.action = Status.IDLE
         elif self.action == Status.IDLE:
             print("IDLE-Modi")
-            bpy.ops.object.select_all(action='SELECT')  # selektiert alle Objekte
-            # löscht selektierte objekte
-            bpy.ops.object.delete(use_global=False, confirm=False)
+            bpy.ops.object.select_all(action='SELECT') # selektiert alle Objekte
+            
+            bpy.ops.object.delete(use_global=False, confirm=False) # löscht selektierte objekte
             bpy.ops.outliner.orphans_purge()  # löscht überbleibende Meshdaten etc.
             return {'FINISHED'}
         elif self.action == Status.EXECUTE:
             # +++++++++++
             bpy.ops.object.select_all(action='SELECT')  # selektiert alle Objekte
-            # löscht selektierte objekte
-            bpy.ops.object.delete(use_global=False, confirm=False)
+            bpy.ops.object.delete(use_global=False, confirm=False) # löscht selektierte objekte
             bpy.ops.outliner.orphans_purge()  # löscht überbleibende Meshdaten etc.
             # ++++++++++
+
+            # Getting hte account-Data
             summonerName = f"{self.summoner_Name}"
             summerTagline = f"{self.summoner_TagLine}"
-            # requestString = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}"
             puuid = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summonerName}/{summerTagline}"
 
             header = {
                 'X-Riot-Token': self.riot_Token,
             }
-            # puuid: _cXJlH3kUv3IMeizi3eCDmeTGkABlml-BIf3298QmsV2wqO-PluzmY6Y3cermq-BSVHwWW8f5Alt_Q
 
             getPuuid = requests.get(puuid, headers=header)
             status = json.loads(getPuuid.text)
             print(f"status1{status}")
+            # error handling for getting no or wrong data
             try:
                 if (status["status"]["status_code"] == 403):
                     print("You need to type in a valid Riot-Token.")
@@ -274,22 +277,14 @@ class APIAddon(bpy.types.Operator):
                             print("An error occured. Please try again and reassure yourself that your inputs are correct.")
                             self.report({'ERROR'}, 'An error occured. Please try again and reassure yourself that your inputs are correct.')
                     except:
-                        #print(f"status2{resp.json()}")
-
-                        # print("help")
-                        # print(resp.json())
-                        # print("test")
-                        # resp.decode('utf-8')
-                        # summunor_dict = resp.json()
-                        # summunor_obj = Summoner(**summunor_dict)
-                        # try:
+                        
                         s = account(**resp.json())
 
                         # print(f"name: {s.name}")
                         # print(f"id: {s.id}")
 
+                        # Getting all data the data for the Options ( maybe move it in the  )
                         requestChampionMasteryString = f"https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{s.id}"
-
 
                         resp = requests.get(requestChampionMasteryString, headers=header)
                         #print(resp.json())
@@ -313,15 +308,9 @@ class APIAddon(bpy.types.Operator):
                         leagueEntries = json.loads(respEntries.text)
                         # print(leagueEntries)
 
-                        """ match i:
-                            case 1:
-                                print("First case")
-                            case 2:
-                                print("Second case")
-                            case _:
-                                print("Didn't match a case") """
+                        
 
-                         # set current frame
+                        # set current frame to 1 so you can start the animations
                         bpy.context.scene.frame_set(1)
 
                         ############# Bar Chart ###############
@@ -357,12 +346,13 @@ class APIAddon(bpy.types.Operator):
                             try:
                                 masteryPointsMax = getCurrentChamp(self, championInfo, champions, 0).points
                                 for x in range(self.number_of_Champs):
-                                    # for champ in champs:
 
                                     maxHeight = 40 # max Height of Bars
                                     currentchamp = getCurrentChamp(
                                         self, championInfo, champions, i)
 
+                                    # what type of variant should be displayed
+                                    # each method creates one bar each time
                                     if self.type_of_Chart_Variant == "CubeBars":
                                         createCube(self, x, currentchamp,
                                                 self.number_of_Champs, cubeMat, masteryPointsMax, maxHeight)
@@ -378,35 +368,25 @@ class APIAddon(bpy.types.Operator):
                                     setNames(self, currentchamp, fontMat, i, self.number_of_Champs)
                                     addScale(self, masteryPointsMax, maxHeight, self.number_of_Champs, fontMat)
 
-                                    # print("help")
-                                    """ print(currentchamp.name)
-
-                                    print(f"i: {i}")
-                                    print(f"ChPoints: {currentchamp.points}")
-                                    print(f"ChId: {currentchamp.id}")
-                                    print("") """
+                        
                                     i += 1
                             except: 
                                 print(f"It seems there isn't enough data  for {self.number_of_Champs} champions to be displayed")
                                 self.report({'ERROR'}, f"It seems there isn't enough data for {self.number_of_Champs} champions to be displayed")
 
                         
-
+                            # create plane for bars to stand on
                             bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0))
                             bpy.context.object.dimensions = (5 + self.number_of_Champs*5, 7, 1)
                             ob = bpy.context.active_object
-                            # bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
-                            # bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
 
                             # Get material
-
                             if ob.data.materials:
                                 # assign to 1st material slot
                                 ob.data.materials[0] = planeMat
                             else:
                                 # no slots
                                 ob.data.materials.append(planeMat)
-                            # bpy.ops.transform.resize(value=(7+ self.number_of_Champs*2, 7, 1))
                             bpy.ops.rigidbody.object_add()
                             bpy.context.object.rigid_body.type = 'PASSIVE'
 
