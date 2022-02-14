@@ -134,7 +134,7 @@ class APIAddon(bpy.types.Operator):
     riot_Token: bpy.props.StringProperty(
         name="X-Riot-Token",
         description="You need to generate a X-Riot-Token and put it here to get acces to the data.",
-        default="RGAPI-f26ea3a1-9b77-40d9-9348-ace7105de0e5",
+        default="RGAPI-3ee59edd-c701-4e86-bddf-888d10f5f80d",
         update=update
     )
 
@@ -320,6 +320,9 @@ class APIAddon(bpy.types.Operator):
                                 print("Second case")
                             case _:
                                 print("Didn't match a case") """
+
+                         # set current frame
+                        bpy.context.scene.frame_set(1)
 
                         ############# Bar Chart ###############
                         if self.type_of_chart == "BarChart":
@@ -733,12 +736,26 @@ def createMaterialPieChart(self, winrate, looserate, winrate_color, lossrate_col
 
     colorRamp.color_ramp.elements.remove(colorRamp.color_ramp.elements[0])
 
-    # Adding new color stop at location 0.100
-    colorRamp.color_ramp.elements.new(winrate)
-    colorRamp.color_ramp.elements.new(winrate+looserate)
-    colorRamp.color_ramp.elements.new(1 - winrate-looserate)
+    # Adding new color stop at location 0
+    colorRamp.color_ramp.elements.new(0)
+    colorRamp.color_ramp.elements.new(0)
 
-    # Setting the color for the stop that we recently created
+    # Insterting keyframes
+    colorRamp.color_ramp.elements[0].keyframe_insert(data_path="position", frame= 0)
+    colorRamp.color_ramp.elements[1].keyframe_insert(data_path="position", frame= 0)
+    colorRamp.color_ramp.elements[2].keyframe_insert(data_path="position", frame= 0)
+
+    # Moving stops to correct position
+    colorRamp.color_ramp.elements[1].position = (winrate)
+    #colorRamp.color_ramp.elements[1].position = (winrate+looserate)
+    #colorRamp.color_ramp.elements[2].position = (1 - winrate-looserate)
+
+    # Insterting keyframes
+    colorRamp.color_ramp.elements[0].keyframe_insert(data_path="position", frame= 100)
+    colorRamp.color_ramp.elements[1].keyframe_insert(data_path="position", frame= 100)
+    colorRamp.color_ramp.elements[2].keyframe_insert(data_path="position", frame= 100)
+
+    # Setting the color for the stops
     colorRamp.color_ramp.elements[0].color = (winrate_color.r,winrate_color.g,winrate_color.b,1)
     colorRamp.color_ramp.elements[1].color = (lossrate_color.r,lossrate_color.g,lossrate_color.b,1)
     colorRamp.color_ramp.elements[2].color = (0.6, 0.6, 0.6, 1)
