@@ -258,8 +258,7 @@ class APIAddon(bpy.types.Operator):
                     idFromPuuid = accountData(**getPuuid.json())
                     requestString = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{idFromPuuid.puuid}"
                     resp = requests.get(requestString, headers=header)
-                    respJson = json.loads(resp.text)
-                    #print(f"status2{resp.json()}")
+                    respJson = json.loads(resp.text)                    
                     try:
                         if (respJson["status"]["status_code"] == 404):
                             print("An error occured. It seems like there was no Player found that matched your input.")
@@ -269,18 +268,18 @@ class APIAddon(bpy.types.Operator):
                             self.report({'ERROR'}, 'An error occured. Please try again and reassure yourself that your inputs are correct.')
                     except:
                         
-                        s = account(**resp.json())
+                        userAccount = account(**resp.json())
 
                         # print(f"name: {s.name}")
                         # print(f"id: {s.id}")
 
                         # Getting all data the data for the Options ( maybe move it in the  )
-                        requestChampionMasteryString = f"https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{s.id}"
+                        requestChampionMasteryString = f"https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/{userAccount.id}"
 
                         resp = requests.get(requestChampionMasteryString, headers=header)
                         #print(resp.json())
 
-                        requestLeagueEntries= f"https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/{s.id}"
+                        requestLeagueEntries= f"https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/{userAccount.id}"
 
                         respEntries = requests.get(requestLeagueEntries, headers=header)
                         # print(respEntries.text)
