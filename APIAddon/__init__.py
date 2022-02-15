@@ -311,99 +311,10 @@ class APIAddon(bpy.types.Operator):
                         ########################## Pie Chart ####################################
                         elif self.type_of_chart == "PieChart":
                             if respEntries.text != "[]":
-                                print("Pie-Chart")
-
-                                ## Get the Data ##
-                                wins = leagueEntries[0]["wins"]
-                                losses = leagueEntries[0]["losses"]
-                                
-                                winrate =  wins/ (wins + losses) 
-                                lossrate = losses / (wins + losses)
-
-
-                                bpy.context.space_data.shading.type = 'MATERIAL'
-
-                                print("var1")
-                                bpy.ops.mesh.primitive_cylinder_add(
-                                    vertices=101, radius=4, depth=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
-                                ob = bpy.context.active_object
-                                ob.rotation_euler[2] = 1.6
-
-                                print(f"wins: {wins} losses: {losses} winrate: {winrate} looserate: {lossrate}")
-
-                                # creates the material of the cylinder. 2nd parameter is the winrate, 3rd is the looserate
-                                mat = createMaterialPieChart(self, winrate, lossrate, self.winrate_color, self.lossrate_color)
-
-                                if ob.data.materials:
-                                    # assign to 1st material slot
-                                    ob.data.materials[0] = mat
-                                else:
-                                    # no slots
-                                    ob.data.materials.append(mat)
-
-                                # creates the material for the Fonts
-                                fontMatWin = bpy.data.materials.get("FontMaterialWin")
-                                if fontMatWin is None:
-                                    # create material
-                                    fontMatWin = bpy.data.materials.new(name="FontMaterialWin")
-
-                                fontMatWin.diffuse_color = (
-                                    self.winrate_color.r, self.winrate_color.g, self.winrate_color.b, 1)
-                                fontMatWin = bpy.data.materials['FontMaterialWin']
-
-                                fontMatLoss = bpy.data.materials.get("FontMaterialLoss")
-                                if fontMatLoss is None:
-                                    # create material
-                                    fontMatLoss = bpy.data.materials.new(name="FontMaterialLoss")
-
-                                fontMatLoss.diffuse_color = (
-                                    self.lossrate_color.r, self.lossrate_color.g, self.lossrate_color.b, 1)
-                                fontMatLoss = bpy.data.materials['FontMaterialLoss']
-
-                                winrate *= 100
-                                lossrate *= 100
-                                ### Display Winrate ###
-
-
-                                bpy.data.curves.new(
-                                    type="FONT", name=f"Font Curve Winrate").body = f"Win rate: {round(winrate,2)}%"
-                                font_objTier = bpy.data.objects.new(  name=f"Font Curve Winrate", object_data=bpy.data.curves[f"Font Curve Winrate"])
-                                bpy.context.scene.collection.objects.link(font_objTier)
-
-                            
-                                font_objTier.rotation_euler[0] = 1.5708
-
-                                font_objTier.scale = (3,3,3)
-                                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-                                font_objTier.location = (-font_objTier.dimensions.x/2, 0, 10)
-
-                                bpy.data.curves[f"Font Curve Winrate"].materials.append(fontMatWin)
-                                bpy.data.curves[f"Font Curve Winrate"].extrude = 0.1
-                                font_objTier.name =f"{winrate}-Font"
-
-                                
-                                
-                                ### Display Lossrate ###
-
-                                bpy.data.curves.new(
-                                    type="FONT", name=f"Font Curve Looserate").body = f"Loss rate: {round(lossrate,2)}%"
-                                font_objRank = bpy.data.objects.new(  name=f"Font Curve Looserate", object_data=bpy.data.curves[f"Font Curve Looserate"])
-                                bpy.context.scene.collection.objects.link(font_objRank)
-
-                            
-                                font_objRank.rotation_euler[0] = 1.5708
-
-                                font_objRank.scale = (3,3,3)
-                                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-                                font_objRank.location = (-font_objRank.dimensions.x/2, 0, 5)
-
-                                bpy.data.curves[f"Font Curve Looserate"].materials.append(fontMatLoss)
-                                bpy.data.curves[f"Font Curve Looserate"].extrude = 0.1
-                                font_objRank.name = f"{lossrate}-Font"
-
-                                
+                                print("Pie-Chart")                               
+                                self.makePieChart(leagueEntries)                                
                             else:
-                                self.report({'ERROR'}, 'It seems there are Data for your ranked games. You need to be placed in a rank for this to work.')   
+                                self.report({'ERROR'}, 'It seems there is no Data for your ranked games. You need to be placed in a rank for this to work.')   
 
 
                         ########################## Rank Display ####################################
@@ -634,6 +545,97 @@ class APIAddon(bpy.types.Operator):
             ob.data.materials.append(planeMat)
         bpy.ops.rigidbody.object_add()
         bpy.context.object.rigid_body.type = 'PASSIVE'
+
+    def makePieChart(self, leagueEntries):
+        ## Get the Data ##
+        wins = leagueEntries[0]["wins"]
+        losses = leagueEntries[0]["losses"]
+        
+        winrate =  wins/ (wins + losses) 
+        lossrate = losses / (wins + losses)
+
+
+        bpy.context.space_data.shading.type = 'MATERIAL'
+
+        print("var1")
+        bpy.ops.mesh.primitive_cylinder_add(
+            vertices=101, radius=4, depth=1, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+        ob = bpy.context.active_object
+        ob.rotation_euler[2] = 1.6
+
+        print(f"wins: {wins} losses: {losses} winrate: {winrate} looserate: {lossrate}")
+
+        # creates the material of the cylinder. 2nd parameter is the winrate, 3rd is the looserate
+        mat = createMaterialPieChart(self, winrate, lossrate, self.winrate_color, self.lossrate_color)
+
+        if ob.data.materials:
+            # assign to 1st material slot
+            ob.data.materials[0] = mat
+        else:
+            # no slots
+            ob.data.materials.append(mat)
+
+        # creates the material for the Fonts
+        fontMatWin = bpy.data.materials.get("FontMaterialWin")
+        if fontMatWin is None:
+            # create material
+            fontMatWin = bpy.data.materials.new(name="FontMaterialWin")
+
+        fontMatWin.diffuse_color = (
+            self.winrate_color.r, self.winrate_color.g, self.winrate_color.b, 1)
+        fontMatWin = bpy.data.materials['FontMaterialWin']
+
+        fontMatLoss = bpy.data.materials.get("FontMaterialLoss")
+        if fontMatLoss is None:
+            # create material
+            fontMatLoss = bpy.data.materials.new(name="FontMaterialLoss")
+
+        fontMatLoss.diffuse_color = (
+            self.lossrate_color.r, self.lossrate_color.g, self.lossrate_color.b, 1)
+        fontMatLoss = bpy.data.materials['FontMaterialLoss']
+
+        winrate *= 100
+        lossrate *= 100
+        ### Display Winrate ###
+
+
+        bpy.data.curves.new(
+            type="FONT", name=f"Font Curve Winrate").body = f"Win rate: {round(winrate,2)}%"
+        font_objTier = bpy.data.objects.new(  name=f"Font Curve Winrate", object_data=bpy.data.curves[f"Font Curve Winrate"])
+        bpy.context.scene.collection.objects.link(font_objTier)
+
+
+        font_objTier.rotation_euler[0] = 1.5708
+
+        font_objTier.scale = (3,3,3)
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+        font_objTier.location = (-font_objTier.dimensions.x/2, 0, 10)
+
+        bpy.data.curves[f"Font Curve Winrate"].materials.append(fontMatWin)
+        bpy.data.curves[f"Font Curve Winrate"].extrude = 0.1
+        font_objTier.name =f"{winrate}-Font"
+
+        
+        
+        ### Display Lossrate ###
+
+        bpy.data.curves.new(
+            type="FONT", name=f"Font Curve Looserate").body = f"Loss rate: {round(lossrate,2)}%"
+        font_objRank = bpy.data.objects.new(  name=f"Font Curve Looserate", object_data=bpy.data.curves[f"Font Curve Looserate"])
+        bpy.context.scene.collection.objects.link(font_objRank)
+
+
+        font_objRank.rotation_euler[0] = 1.5708
+
+        font_objRank.scale = (3,3,3)
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+        font_objRank.location = (-font_objRank.dimensions.x/2, 0, 5)
+
+        bpy.data.curves[f"Font Curve Looserate"].materials.append(fontMatLoss)
+        bpy.data.curves[f"Font Curve Looserate"].extrude = 0.1
+        font_objRank.name = f"{lossrate}-Font"
+
+
     def draw(self, context):
         self.layout.use_property_split = True
         #self.layout.scale_x = -1
