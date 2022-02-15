@@ -79,7 +79,7 @@ class champ(object):
 
 # other operators for the buttons
 
-class clearTest(bpy.types.Operator):
+class clearAction(bpy.types.Operator):
     bl_idname = "button.clear"
     bl_label ="clear"
 
@@ -89,7 +89,7 @@ class clearTest(bpy.types.Operator):
         
         return {'FINISHED'}
 
-class executeTest(bpy.types.Operator):
+class executeAction(bpy.types.Operator):
     bl_idname = "button.execute"
     bl_label ="execute"
 
@@ -225,34 +225,25 @@ class APIAddon(bpy.types.Operator):
         print(f"self.action start: {self.action}")
         if self.action == Status.CLEAR:
             print("CLEAR-Modi")
-            #self.clear_Scene()
-            bpy.ops.object.select_all(action='SELECT')  # selektiert alle Objekte
-            bpy.ops.object.delete(use_global=False, confirm=False) # löscht selektierte objekte
-            bpy.ops.outliner.orphans_purge()  # löscht überbleibende Meshdaten etc.
+            self.clear()
+            return {'FINISHED'}
         elif self.action == Status.IDLE:
             print("IDLE-Modi")
-            bpy.ops.object.select_all(action='SELECT') # selektiert alle Objekte
-            
-            bpy.ops.object.delete(use_global=False, confirm=False) # löscht selektierte objekte
-            bpy.ops.outliner.orphans_purge()  # löscht überbleibende Meshdaten etc.
+            self.clear()
             return {'FINISHED'}
         elif self.action == Status.EXECUTE:
-            # +++++++++++
-            bpy.ops.object.select_all(action='SELECT')  # selektiert alle Objekte
-            bpy.ops.object.delete(use_global=False, confirm=False) # löscht selektierte objekte
-            bpy.ops.outliner.orphans_purge()  # löscht überbleibende Meshdaten etc.
-            # ++++++++++
+            self.clear()            
 
             # Getting hte account-Data
-            summonerName = f"{self.summoner_Name}"
-            summerTagline = f"{self.summoner_TagLine}"
-            puuid = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summonerName}/{summerTagline}"
+           # summonerName = f"{self.summoner_Name}"
+            #summerTagline = f"{self.summoner_TagLine}"
+            #puuid = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summonerName}/{summerTagline}"
 
             header = {
                 'X-Riot-Token': self.riot_Token,
             }
 
-            getPuuid = requests.get(puuid, headers=header)
+            getPuuid = self.getPuuidResponse(header)
             status = json.loads(getPuuid.text)
             print(f"status1{status}")
             # error handling for getting no or wrong data
@@ -631,6 +622,18 @@ class APIAddon(bpy.types.Operator):
 
         return {"FINISHED"}
     
+    def getPuuidResponse(self, header):
+        summonerName = f"{self.summoner_Name}"
+        summerTagline = f"{self.summoner_TagLine}"
+        puuid = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summonerName}/{summerTagline}"
+       
+        return requests.get(puuid, headers=header)
+
+    def clear(self):
+        bpy.ops.object.select_all(action='SELECT')  # selektiert alle Objekte
+        bpy.ops.object.delete(use_global=False, confirm=False) # löscht selektierte objekte
+        bpy.ops.outliner.orphans_purge()  # löscht überbleibende Meshdaten etc.
+
     def draw(self, context):
         self.layout.use_property_split = True
         #self.layout.scale_x = -1
@@ -651,8 +654,8 @@ class APIAddon(bpy.types.Operator):
         row3.prop(self, "riot_Token")
 
 
-        row10 = box.row()
-        row10.prop(self, "action")
+        #row10 = box.row()
+        #row10.prop(self, "action")
 
         box2 = self.layout.box()
         box2.label(text="Options")
@@ -913,16 +916,16 @@ def menu_func(self, context):
 
 def register():
     bpy.types.VIEW3D_MT_mesh_add.append(menu_func)
-    bpy.utils.register_class(clearTest)
-    bpy.utils.register_class(executeTest)
+    bpy.utils.register_class(clearAction)
+    bpy.utils.register_class(executeAction)
     bpy.utils.register_class(APIAddon)
 
 
 def unregister():
     bpy.types.VIEW3D_MT_mesh_add.remove(menu_func)
     bpy.utils.unregister_class(APIAddon)
-    bpy.utils.unregister_class(clearTest)
-    bpy.utils.unregister_class(executeTest)
+    bpy.utils.unregister_class(clearAction)
+    bpy.utils.unregister_class(executeAction)
 
 
 if __name__ == "__main__":
