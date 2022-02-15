@@ -315,144 +315,13 @@ class APIAddon(bpy.types.Operator):
                                 self.makePieChart(leagueEntries)                                
                             else:
                                 self.report({'ERROR'}, 'It seems there is no Data for your ranked games. You need to be placed in a rank for this to work.')   
-
-
                         ########################## Rank Display ####################################
                         elif self.type_of_chart == "RankDisplay":
                             if respEntries.text != "[]":
-                                print("Rank Display")
-                                bpy.context.space_data.shading.type = 'MATERIAL'
-                                
-
-                                ### Get Data ###
-
-                                rank = leagueEntries[0]["rank"]
-                                tier = leagueEntries[0]["tier"]
-
-                                bpy.ops.mesh.primitive_plane_add(size=30, enter_editmode=False, align='WORLD', location=(0, 0, 30), rotation=(1.5708, 0, 0), scale=(1, 1, 1))
-
-                                ob = bpy.context.active_object
-
-                                mat = bpy.data.materials.new(name="Rank_Mat")
-                                mat.use_nodes = True
-                                bsdf = mat.node_tree.nodes["Principled BSDF"]
-                                texImage = mat.node_tree.nodes.new('ShaderNodeTexImage')
-
-                                mat.blend_method = "BLEND"
-                                mat.shadow_method = "CLIP"
-
-                                ############ Laden des Rank-Bild ######################
-
-                                # create temporary folder
-                                temp_dir = tempfile.TemporaryDirectory()
-                                
-                                try:
-                                    #fetch the image 
-                                    url_rank_symbol = f"https://raw.communitydragon.org/12.3/game/assets/ux/tftmobile/particles/tft_regalia_{tier.lower()}.png"               
-                                    headers = {'Content-type': 'image/png'}                                                 
-                                    r = requests.get(url_rank_symbol, stream=True, headers=headers)
-
-                                    # write the fetched image on the file
-                                    with open(f"{temp_dir.name}\\rank_image.png", 'wb') as f:
-                                        f.write(r.content)
-
-                                    #create a blender datablock of it
-                                    img = bpy.data.images.load(f"{temp_dir.name}\\rank_image.png")
-
-                                    #pack the image in the blender file so...
-                                    img.pack()
-
-                                    #...we can delete the temp image
-                                    os.remove(f"{temp_dir.name}\\rank_image.png")
-                                except Exception as e:
-                                    raise NameError("Cannot load image: {0}".format(e))
-
-                                texImage.image = img
-                                            
-
-                                ###################################################
-
-
-                                mat.node_tree.links.new(bsdf.inputs['Base Color'], texImage.outputs['Color'])
-                                mat.node_tree.links.new(bsdf.inputs[21], texImage.outputs[1])
-
-                                if ob.data.materials:
-                                    ob.data.materials[0] = mat
-                                else:
-                                    ob.data.materials.append(mat)
-
-                                fontMat = bpy.data.materials.get("FontMaterial")
-                                if fontMat is None:
-                                    # create material
-                                    fontMat = bpy.data.materials.new(name="FontMaterial")
-
-                                fontMat.diffuse_color = (
-                                    self.name_color.r, self.name_color.g, self.name_color.b, 1)
-                                fontMat = bpy.data.materials['FontMaterial']
-
-
-                                ### Display Name ###
-
-                                bpy.data.curves.new(
-                                    type="FONT", name=f"Font Curve Name").body = self.summoner_Name
-                                font_obj = bpy.data.objects.new(  name=f"Font Curve Name", object_data=bpy.data.curves[f"Font Curve Name"])
-                                bpy.context.scene.collection.objects.link(font_obj)
-
-                            
-                                font_obj.rotation_euler[0] = 1.5708
-
-                                font_obj.scale = (5,5,5)
-                                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-                                font_obj.location = (-font_obj.dimensions.x/2, 0, 0)
-
-                                bpy.data.curves[f"Font Curve Name"].materials.append(fontMat)
-                                bpy.data.curves[f"Font Curve Name"].extrude = 0.1
-                                font_obj.name = self.summoner_Name + "-Font"
-
-                            
-
-                                ### Display Tier ###
-
-
-                                bpy.data.curves.new(
-                                    type="FONT", name=f"Font Curve Tier").body = tier
-                                font_objTier = bpy.data.objects.new(  name=f"Font Curve Tier", object_data=bpy.data.curves[f"Font Curve Tier"])
-                                bpy.context.scene.collection.objects.link(font_objTier)
-
-                            
-                                font_objTier.rotation_euler[0] = 1.5708
-
-                                font_objTier.scale = (5,5,5)
-                                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-                                font_objTier.location = (-font_objTier.dimensions.x/2, 0, 10)
-
-                                bpy.data.curves[f"Font Curve Tier"].materials.append(fontMat)
-                                bpy.data.curves[f"Font Curve Tier"].extrude = 0.1
-                                font_objTier.name = tier + "-Font"
-
-                                
-                                
-                                ### Display Rank ###
-
-                                bpy.data.curves.new(
-                                    type="FONT", name=f"Font Curve Rank").body = rank
-                                font_objRank = bpy.data.objects.new(  name=f"Font Curve Rank", object_data=bpy.data.curves[f"Font Curve Rank"])
-                                bpy.context.scene.collection.objects.link(font_objRank)
-
-                            
-                                font_objRank.rotation_euler[0] = 1.5708
-
-                                font_objRank.scale = (4,4,4)
-                                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-                                font_objRank.location = (-font_objRank.dimensions.x/2, 0, 5)
-
-                                bpy.data.curves[f"Font Curve Rank"].materials.append(fontMat)
-                                bpy.data.curves[f"Font Curve Rank"].extrude = 0.1
-                                font_objRank.name = rank + "-Font"
-
+                                print("Rank Display")                                
+                                self.makeRankDisplay(leagueEntries)
                             else:
                                 self.report({'ERROR'}, 'It seems there is no Data for your ranked games. You need to be placed in a rank for this to work.')   
-
                         else:
                             self.report({'ERROR'}, 'weird')
             #self.action = Status.IDLE
@@ -636,6 +505,133 @@ class APIAddon(bpy.types.Operator):
         font_objRank.name = f"{lossrate}-Font"
 
 
+    def makeRankDisplay(self, leagueEntries):
+        bpy.context.space_data.shading.type = 'MATERIAL'
+        ### Get Data ###
+
+        rank = leagueEntries[0]["rank"]
+        tier = leagueEntries[0]["tier"]
+
+        bpy.ops.mesh.primitive_plane_add(size=30, enter_editmode=False, align='WORLD', location=(0, 0, 30), rotation=(1.5708, 0, 0), scale=(1, 1, 1))
+
+        ob = bpy.context.active_object
+
+        mat = bpy.data.materials.new(name="Rank_Mat")
+        mat.use_nodes = True
+        bsdf = mat.node_tree.nodes["Principled BSDF"]
+        texImage = mat.node_tree.nodes.new('ShaderNodeTexImage')
+
+        mat.blend_method = "BLEND"
+        mat.shadow_method = "CLIP"
+
+        ############ Laden des Rank-Bild ######################
+
+        # create temporary folder
+        temp_dir = tempfile.TemporaryDirectory()
+        
+        try:
+            #fetch the image 
+            url_rank_symbol = f"https://raw.communitydragon.org/12.3/game/assets/ux/tftmobile/particles/tft_regalia_{tier.lower()}.png"               
+            headers = {'Content-type': 'image/png'}                                                 
+            r = requests.get(url_rank_symbol, stream=True, headers=headers)
+
+            # write the fetched image on the file
+            with open(f"{temp_dir.name}\\rank_image.png", 'wb') as f:
+                f.write(r.content)
+
+            #create a blender datablock of it
+            img = bpy.data.images.load(f"{temp_dir.name}\\rank_image.png")
+
+            #pack the image in the blender file so...
+            img.pack()
+
+            #...we can delete the temp image
+            os.remove(f"{temp_dir.name}\\rank_image.png")
+        except Exception as e:
+            raise NameError("Cannot load image: {0}".format(e))
+
+        texImage.image = img
+                    
+
+        ###################################################
+
+
+        mat.node_tree.links.new(bsdf.inputs['Base Color'], texImage.outputs['Color'])
+        mat.node_tree.links.new(bsdf.inputs[21], texImage.outputs[1])
+
+        if ob.data.materials:
+            ob.data.materials[0] = mat
+        else:
+            ob.data.materials.append(mat)
+
+        fontMat = bpy.data.materials.get("FontMaterial")
+        if fontMat is None:
+            # create material
+            fontMat = bpy.data.materials.new(name="FontMaterial")
+
+        fontMat.diffuse_color = (
+            self.name_color.r, self.name_color.g, self.name_color.b, 1)
+        fontMat = bpy.data.materials['FontMaterial']
+
+
+        ### Display Name ###
+
+        bpy.data.curves.new(
+            type="FONT", name=f"Font Curve Name").body = self.summoner_Name
+        font_obj = bpy.data.objects.new(  name=f"Font Curve Name", object_data=bpy.data.curves[f"Font Curve Name"])
+        bpy.context.scene.collection.objects.link(font_obj)
+
+    
+        font_obj.rotation_euler[0] = 1.5708
+
+        font_obj.scale = (5,5,5)
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+        font_obj.location = (-font_obj.dimensions.x/2, 0, 0)
+
+        bpy.data.curves[f"Font Curve Name"].materials.append(fontMat)
+        bpy.data.curves[f"Font Curve Name"].extrude = 0.1
+        font_obj.name = self.summoner_Name + "-Font"
+
+    
+
+        ### Display Tier ###
+
+
+        bpy.data.curves.new(
+            type="FONT", name=f"Font Curve Tier").body = tier
+        font_objTier = bpy.data.objects.new(  name=f"Font Curve Tier", object_data=bpy.data.curves[f"Font Curve Tier"])
+        bpy.context.scene.collection.objects.link(font_objTier)
+
+    
+        font_objTier.rotation_euler[0] = 1.5708
+
+        font_objTier.scale = (5,5,5)
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+        font_objTier.location = (-font_objTier.dimensions.x/2, 0, 10)
+
+        bpy.data.curves[f"Font Curve Tier"].materials.append(fontMat)
+        bpy.data.curves[f"Font Curve Tier"].extrude = 0.1
+        font_objTier.name = tier + "-Font"
+
+        
+        
+        ### Display Rank ###
+
+        bpy.data.curves.new(
+            type="FONT", name=f"Font Curve Rank").body = rank
+        font_objRank = bpy.data.objects.new(  name=f"Font Curve Rank", object_data=bpy.data.curves[f"Font Curve Rank"])
+        bpy.context.scene.collection.objects.link(font_objRank)
+
+    
+        font_objRank.rotation_euler[0] = 1.5708
+
+        font_objRank.scale = (4,4,4)
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+        font_objRank.location = (-font_objRank.dimensions.x/2, 0, 5)
+
+        bpy.data.curves[f"Font Curve Rank"].materials.append(fontMat)
+        bpy.data.curves[f"Font Curve Rank"].extrude = 0.1
+        font_objRank.name = rank + "-Font"
     def draw(self, context):
         self.layout.use_property_split = True
         #self.layout.scale_x = -1
