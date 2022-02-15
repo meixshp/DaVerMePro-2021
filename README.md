@@ -36,5 +36,6 @@ Shows the current rank of the player.
 
 ## Installation guide
 With the Blender extension for Visual Studio Code installed you can install the addon by pressing F1 und building the Addon in your Blender-Instance.
-From there you can just search for the Addon by pressing F3 and look for LOL-API Visualizer.
+From there you can just search for the Addon by pressing F3 and look for LOL-API Visualizer. 
+#### Path to the Addon
 <img src="https://github.com/meixshp/DaVerMePro-2021/blob/main/Pictures/blenderPath.png">
