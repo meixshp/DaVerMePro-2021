@@ -33,8 +33,6 @@ bl_info = {
     "category": "Generic"
 }
 
-global scaleFac
-
 class Status(Enum):
     IDLE = 1
     EXECUTE = 2
@@ -139,7 +137,7 @@ class APIAddon(bpy.types.Operator):
     riot_Token: bpy.props.StringProperty(
         name="X-Riot-Token",
         description="You need to generate a X-Riot-Token and put it here to get acces to the data.",
-        default="RGAPI-3ee59edd-c701-4e86-bddf-888d10f5f80d",
+        default="RGAPI-80cd2e16-8930-406c-b729-6257bb4418af",
         update=update
     )
 
@@ -632,17 +630,15 @@ class APIAddon(bpy.types.Operator):
         bpy.data.curves[f"Font Curve Rank"].materials.append(fontMat)
         bpy.data.curves[f"Font Curve Rank"].extrude = 0.1
         font_objRank.name = rank + "-Font"
+
+
     def draw(self, context):
         self.layout.use_property_split = True
-        #self.layout.scale_x = -1
 
         box = self.layout.box()
         box.label(text="Account Info and Riot-Token")
 
-        #box.grid_flow(False,0,True,False,True)
         row1 = box.row()
-
-        #row1 = self.layout.row()
         row1.prop(self, "summoner_Name")
 
         row2 = box.row()
@@ -650,10 +646,6 @@ class APIAddon(bpy.types.Operator):
 
         row3 = box.row()
         row3.prop(self, "riot_Token")
-
-
-        #row10 = box.row()
-        #row10.prop(self, "action")
 
         box2 = self.layout.box()
         box2.label(text="Options")
@@ -720,6 +712,7 @@ def createMaterialPieChart(self, winrate, looserate, winrate_color, lossrate_col
     # Adding new color stop at location 0
     colorRamp.color_ramp.elements.new(0)
     colorRamp.color_ramp.elements.new(0)
+    colorRamp.color_ramp.elements[2].position = (0)
 
     # Insterting keyframes
     colorRamp.color_ramp.elements[0].keyframe_insert(data_path="position", frame= 0)
@@ -728,7 +721,7 @@ def createMaterialPieChart(self, winrate, looserate, winrate_color, lossrate_col
 
     # Moving stops to correct position
     colorRamp.color_ramp.elements[1].position = (winrate)
-    #colorRamp.color_ramp.elements[1].position = (winrate+looserate)
+    colorRamp.color_ramp.elements[2].position = (winrate+looserate)
     #colorRamp.color_ramp.elements[2].position = (1 - winrate-looserate)
 
     # Insterting keyframes
@@ -824,19 +817,9 @@ def createNameBars(self, i, currentChamp, numberOfChamps, mat, masteryPointsMax,
 
     font_obj.location = (-((numberOfChamps)/2 * 5) + (i+0.5) * 5 + font_obj.dimensions.x/4, 0, 0)
 
-    font_obj.scale = (0, 2, 1)
-    font_obj.keyframe_insert(data_path="scale",frame= 0)
-
-    
-    font_obj.scale = (scaleFac/2, 2, 1)    
-    font_obj.keyframe_insert(data_path="scale",frame= 100)
-
-    # bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
     font_obj.dimensions = (scaleFac, 2, 1)
     bpy.data.objects[f"Font BarsObj{i}"].rotation_euler[0] = 1.5708
     bpy.data.objects[f"Font BarsObj{i}"].rotation_euler[1] = -1.5708
-    # font_obj.rotation_quaternion = (1,1,1,45)
-    # font_obj.rotation_euler.y = 90
 
     bpy.data.curves[f"Font Bars{i}"].materials.append(mat)
     bpy.data.curves[f"Font Bars{i}"].extrude = 0.3
