@@ -13,6 +13,7 @@
 
 
 from enum import Enum
+from msilib.schema import Error
 import bpy
 import requests
 import json
@@ -233,9 +234,9 @@ class APIAddon(bpy.types.Operator):
             return {'FINISHED'}
         elif self.action == Status.EXECUTE:
             self.clear()            
-
-            # Getting hte account-Data
-           # summonerName = f"{self.summoner_Name}"
+           
+            #Getting hte account-Data
+            #summonerName = f"{self.summoner_Name}"
             #summerTagline = f"{self.summoner_TagLine}"
             #puuid = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summonerName}/{summerTagline}"
 
@@ -306,80 +307,7 @@ class APIAddon(bpy.types.Operator):
                         ############# Bar Chart ###############
                         if self.type_of_chart == "BarChart":
                             print("Bar-Chart")
-
-                            fontMat = bpy.data.materials.get("FontMaterial")
-                            if fontMat is None:
-                                # create material
-                                fontMat = bpy.data.materials.new(name="FontMaterial")
-
-                            fontMat.diffuse_color = (
-                                self.name_color.r, self.name_color.g, self.name_color.b, 1)
-                            fontMat = bpy.data.materials['FontMaterial']
-
-                            cubeMat = bpy.data.materials.get("CubeMaterial")
-                            if cubeMat is None:
-                                # create material
-                                cubeMat = bpy.data.materials.new(name="CubeMaterial")
-                            cubeMat.diffuse_color = (
-                                self.cube_color.r, self.cube_color.g, self.cube_color.b, 1)
-
-                            planeMat = bpy.data.materials.get("PlaneMaterial")
-                            if planeMat is None:
-                                # create material
-                                planeMat = bpy.data.materials.new(name="PlaneMaterial")
-                            planeMat.diffuse_color = (
-                                self.plane_color.r, self.plane_color.g, self.plane_color.b, 1)
-
-                            i = 0
-                            
-                            # for y in range(2):
-                            try:
-                                masteryPointsMax = getCurrentChamp(self, championInfo, champions, 0).points
-                                for x in range(self.number_of_Champs):
-
-                                    maxHeight = 40 # max Height of Bars
-                                    currentchamp = getCurrentChamp(
-                                        self, championInfo, champions, i)
-
-                                    # what type of variant should be displayed
-                                    # each method creates one bar each time
-                                    if self.type_of_Chart_Variant == "CubeBars":
-                                        createCube(self, x, currentchamp,
-                                                self.number_of_Champs, cubeMat, masteryPointsMax, maxHeight)
-                                    elif self.type_of_Chart_Variant == "NameBars":
-                                        createNameBars(self, i, currentchamp,
-                                                    self.number_of_Champs, cubeMat,masteryPointsMax, maxHeight)
-                                    elif self.type_of_Chart_Variant == "CubeTowerBars":
-                                        # creates the tower of small cubes
-                                        createCubeTower(self, currentchamp,
-                                                        self.number_of_Champs, i, cubeMat, masteryPointsMax, maxHeight)
-                                        self.report({'INFO'}, "Press play to see the tower crumble :)")
-
-                                    setNames(self, currentchamp, fontMat, i, self.number_of_Champs)
-                                    addScale(self, masteryPointsMax, maxHeight, self.number_of_Champs, fontMat)
-
-                        
-                                    i += 1
-                            except: 
-                                print(f"It seems there isn't enough data  for {self.number_of_Champs} champions to be displayed")
-                                self.report({'ERROR'}, f"It seems there isn't enough data for {self.number_of_Champs} champions to be displayed")
-
-                        
-                            # create plane for bars to stand on
-                            bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0))
-                            bpy.context.object.dimensions = (5 + self.number_of_Champs*5, 7, 1)
-                            ob = bpy.context.active_object
-
-                            # Get material
-                            if ob.data.materials:
-                                # assign to 1st material slot
-                                ob.data.materials[0] = planeMat
-                            else:
-                                # no slots
-                                ob.data.materials.append(planeMat)
-                            bpy.ops.rigidbody.object_add()
-                            bpy.context.object.rigid_body.type = 'PASSIVE'
-
+                            self.makeBarChart(championInfo, champions)
                         ########################## Pie Chart ####################################
                         elif self.type_of_chart == "PieChart":
                             if respEntries.text != "[]":
@@ -633,6 +561,79 @@ class APIAddon(bpy.types.Operator):
         bpy.ops.object.delete(use_global=False, confirm=False) # löscht selektierte objekte
         bpy.ops.outliner.orphans_purge()  # löscht überbleibende Meshdaten etc.
 
+    def makeBarChart(self, championInfo, champions):
+        fontMat = bpy.data.materials.get("FontMaterial")
+        if fontMat is None:
+            # create material
+            fontMat = bpy.data.materials.new(name="FontMaterial")
+
+        fontMat.diffuse_color = (
+            self.name_color.r, self.name_color.g, self.name_color.b, 1)
+        fontMat = bpy.data.materials['FontMaterial']
+
+        cubeMat = bpy.data.materials.get("CubeMaterial")
+        if cubeMat is None:
+            # create material
+            cubeMat = bpy.data.materials.new(name="CubeMaterial")
+        cubeMat.diffuse_color = (
+            self.cube_color.r, self.cube_color.g, self.cube_color.b, 1)
+
+        planeMat = bpy.data.materials.get("PlaneMaterial")
+        if planeMat is None:
+            # create material
+            planeMat = bpy.data.materials.new(name="PlaneMaterial")
+        planeMat.diffuse_color = (
+            self.plane_color.r, self.plane_color.g, self.plane_color.b, 1)
+
+        i = 0
+        
+        # for y in range(2):
+        try:
+            masteryPointsMax = getCurrentChamp(self, championInfo, champions, 0).points
+            for x in range(self.number_of_Champs):
+
+                maxHeight = 40 # max Height of Bars
+                currentchamp = getCurrentChamp(
+                    self, championInfo, champions, i)
+
+                # what type of variant should be displayed
+                # each method creates one bar each time
+                if self.type_of_Chart_Variant == "CubeBars":
+                    createCube(self, x, currentchamp,
+                            self.number_of_Champs, cubeMat, masteryPointsMax, maxHeight)
+                elif self.type_of_Chart_Variant == "NameBars":
+                    createNameBars(self, i, currentchamp,
+                                self.number_of_Champs, cubeMat,masteryPointsMax, maxHeight)
+                elif self.type_of_Chart_Variant == "CubeTowerBars":
+                    # creates the tower of small cubes
+                    createCubeTower(self, currentchamp,
+                                    self.number_of_Champs, i, cubeMat, masteryPointsMax, maxHeight)
+                    self.report({'INFO'}, "Press play to see the tower crumble :)")
+
+                setNames(self, currentchamp, fontMat, i, self.number_of_Champs)
+                addScale(self, masteryPointsMax, maxHeight, self.number_of_Champs, fontMat)
+
+    
+                i += 1
+        except: 
+            print(f"It seems there isn't enough data  for {self.number_of_Champs} champions to be displayed")
+            self.report({'ERROR'}, f"It seems there isn't enough data for {self.number_of_Champs} champions to be displayed")
+
+    
+        # create plane for bars to stand on
+        bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0))
+        bpy.context.object.dimensions = (5 + self.number_of_Champs*5, 7, 1)
+        ob = bpy.context.active_object
+
+        # Get material
+        if ob.data.materials:
+            # assign to 1st material slot
+            ob.data.materials[0] = planeMat
+        else:
+            # no slots
+            ob.data.materials.append(planeMat)
+        bpy.ops.rigidbody.object_add()
+        bpy.context.object.rigid_body.type = 'PASSIVE'
     def draw(self, context):
         self.layout.use_property_split = True
         #self.layout.scale_x = -1
