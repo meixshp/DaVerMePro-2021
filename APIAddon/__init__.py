@@ -137,15 +137,15 @@ class APIAddon(bpy.types.Operator):
     riot_Token: bpy.props.StringProperty(
         name="X-Riot-Token",
         description="You need to generate a X-Riot-Token and put it here to get acces to the data.",
-        default="RGAPI-80cd2e16-8930-406c-b729-6257bb4418af",
+        default="RGAPI-87ee97e2-b903-4a20-9c60-e1e504c95dc1",
         update=update
     )
 
     type_of_chart: bpy.props.EnumProperty(
         items={
-            ('BarChart', 'Bar-Chart', 'Displays masterypoints in a Bar chart'),
-            ('PieChart', 'Pie-Chart', 'Displays winrate in a Pie chart'),
-            ('RankDisplay', 'Display Rank', 'Displays Rank')},
+            ('BarChart', 'Bar-Chart', 'Displays championpoints in a Bar chart.'),
+            ('PieChart', 'Pie-Chart', 'Displays winrate in a Pie chart.'),
+            ('RankDisplay', 'Display Rank', 'Displays the Rank of the player.')},
 
         name="Type of chart",
         description="Which type of chart do your want? Bar chart, Cake chart, ...",
@@ -386,13 +386,11 @@ class APIAddon(bpy.types.Operator):
                     # creates the tower of small cubes
                     createCubeTower(self, currentchamp,
                                     self.number_of_Champs, i, cubeMat, masteryPointsMax, maxHeight)
-                    self.report({'INFO'}, "Press play to see the tower crumble :)")
 
                 setNames(self, currentchamp, fontMat, i, self.number_of_Champs)
-                addScale(self, masteryPointsMax, maxHeight, self.number_of_Champs, fontMat)
-
-    
                 i += 1
+            addScale(self, masteryPointsMax, maxHeight, self.number_of_Champs, fontMat)
+            self.report({'INFO'}, "Press play to see the animation :)")
         except: 
             print(f"It seems there isn't enough data  for {self.number_of_Champs} champions to be displayed")
             self.report({'ERROR'}, f"It seems there isn't enough data for {self.number_of_Champs} champions to be displayed")
@@ -790,7 +788,7 @@ def addScale( self, masteryPointsMax, maxHeight, numberOfChamps, mat):
     scaleString = f"{masteryPointsMax}"
     for x in range(numberOfChamps):
         scaleString += "__________"
-    scaleString += "Masterypoints" 
+    scaleString += "Championpoints" 
     bpy.data.curves.new(
         type="FONT", name=f"Scale Font").body = scaleString
     font_obj = bpy.data.objects.new(
